@@ -141,6 +141,7 @@ def on_select(v):
         Chbox_var[count].set(True)
 
 
+
 # %%
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
 Rat_frame.place(x=0, y=0, width=140, height=50)
@@ -664,20 +665,22 @@ Win_GUI.mainloop()
 
 # %% [markdown]
 # <font size="2">
-#
+# 
 # ```python
 # from tkinter import *
 # from my_functions import my_variable
-#
+# 
 # def main():
 #     root = Tk()
 #     returned_value = my_variable
 #     my_button = Button(root, text="Click me!", command=lambda: print(returned_value()))
 #     my_button.pack()
 #     root.mainloop()
-#
-#
+# 
+# 
 # if __name__ == "__main__":
 #     main()
 # ```
 # </font>
+
+

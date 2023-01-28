@@ -474,11 +474,12 @@ def BW_setting(v):
 
     geom_max_x = []
     geom_max_y = []
+
     for count, i in enumerate(Band_list):
         pos_x1 = 10
         pos_y1 = 5 + 35 * count
         Band_list_var[count] = ttkbst.Label(ChildWin_bw, text=f"{rat}{i}")
-        Band_list_var[count].place(x=pos_x1, y=pos_y1, width=50, height=30)
+        Band_list_var[count].place(x=pos_x1, y=pos_y1, width=45, height=30)
 
         BW_list_var[count] = [None] * len(Band_list.get(i))
         BW_Label[count] = [None] * len(Band_list.get(i))
@@ -488,7 +489,7 @@ def BW_setting(v):
             BW_list_var[count][c] = ttkbst.BooleanVar()
             pos_x2 = 50 + 50 * c
             BW_Label[count][c] = ttkbst.Checkbutton(ChildWin_bw, text=f"{k}", variable=BW_list_var[count][c])
-            BW_Label[count][c].place(x=pos_x2, y=pos_y1, width=50, height=30)
+            BW_Label[count][c].place(x=pos_x2, y=pos_y1, width=45, height=30)
             BW_list_var[count][c].set(True)
             geom_max_x.append(pos_x2)
             geom_max_y.append(pos_y1)
@@ -509,10 +510,16 @@ def BW_setting(v):
                 elif (i in [77, 78]) & (k in [5, 35, 45]):
                     BW_Label[count][c].config(state=tk.DISABLED)
                     BW_list_var[count][c].set(False)
+    
+    if v == 1:
+        Btn_all_x = max(geom_max_x) - 40
+        Btn_all_y = max(geom_max_y) + 40
+        Btn_ok_x = max(geom_max_x) + 15
+        Btn_ok_y = max(geom_max_y) + 40
 
-    ChildWin_bw.geometry(f"{max(geom_max_x)+50}x{max(geom_max_y)+110}")
+        ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) + 80}")
 
-    if v == 2:
+    elif v == 2:
         Btn_BW = [None, None, None, None]
         bw_var = ttkbst.IntVar()
         for counter, i in enumerate(range(5, 21, 5)):
@@ -525,14 +532,29 @@ def BW_setting(v):
             )
             ps_x = pos_x2 - 50 * (3 - counter)
             ps_y = pos_y1 + 35
-            Btn_BW[counter].place(x=ps_x, y=ps_y, width=50, height=30)
+            Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
+
+        Btn_all_x = max(geom_max_x) - 50
+        Btn_all_y = max(geom_max_y) + 70
+        Btn_ok_x = max(geom_max_x)
+        Btn_ok_y = max(geom_max_y) + 70
+
+        ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
+
+    elif v == 3:
+        Btn_all_x = max(geom_max_x) - 50
+        Btn_all_y = max(geom_max_y) + 70
+        Btn_ok_x = max(geom_max_x)
+        Btn_ok_y = max(geom_max_y) + 70
+
+        ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
 
     Btn_all = ttkbst.Button(ChildWin_bw, text="All", bootstyle="info")
-    Btn_all.place(x=max(geom_max_x) - 50, y=max(geom_max_y) + 70, width=40, height=30)
+    Btn_all.place(x=Btn_all_x, y=Btn_all_y, width=45, height=30)
     Btn_all.config(command=lambda: BW_check(0, Band_list, BW_Label, BW_list_var))
 
     Btn_ok = ttkbst.Button(ChildWin_bw, text="OK", bootstyle="info")
-    Btn_ok.place(x=max(geom_max_x), y=max(geom_max_y) + 70, width=40, height=30)
+    Btn_ok.place(x=Btn_ok_x, y=Btn_ok_y, width=45, height=30)
     Btn_ok.config(command=lambda: BW_setting_ok(Band_list, BW_list_var))
 
 
