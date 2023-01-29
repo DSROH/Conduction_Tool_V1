@@ -510,7 +510,7 @@ def BW_setting(v):
                 elif (i in [77, 78]) & (k in [5, 35, 45]):
                     BW_Label[count][c].config(state=tk.DISABLED)
                     BW_list_var[count][c].set(False)
-    
+
     if v == 1:
         Btn_all_x = max(geom_max_x) - 40
         Btn_all_y = max(geom_max_y) + 40
@@ -542,6 +542,20 @@ def BW_setting(v):
         ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
 
     elif v == 3:
+        Btn_BW = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        bw_var = ttkbst.IntVar()
+        for counter, i in enumerate([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]):
+            Btn_BW[counter] = ttkbst.Radiobutton(
+                ChildWin_bw,
+                text=i,
+                value=i,
+                variable=bw_var,
+                command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
+            )
+            ps_x = pos_x2 - 50 * (14 - counter)
+            ps_y = pos_y1 + 35
+            Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
+
         Btn_all_x = max(geom_max_x) - 50
         Btn_all_y = max(geom_max_y) + 70
         Btn_ok_x = max(geom_max_x)
@@ -571,10 +585,10 @@ def BW_check(bw_var, Band_list, BW_Label, BW_list_var):
             else:
                 chk.append(BW_list_var[i][k].get())  # True or False
     # DISABLED 이면 Skip 하도록 구현
-    for m, n in enumerate(Band_list):
-        for o, p in enumerate(Band_list.get(n)):
-            match bw_var:
-                case 0:  # all button
+    match bw_var:
+        case 0:  # all button
+            for m, n in enumerate(Band_list):
+                for o, p in enumerate(Band_list.get(n)):
                     if state[m][o] == "disabled":
                         pass
                     else:
@@ -582,18 +596,48 @@ def BW_check(bw_var, Band_list, BW_Label, BW_list_var):
                             BW_list_var[m][o].set(False)
                         else:
                             BW_list_var[m][o].set(True)
-                case 5:
-                    BW_list_var[m][o].set(False)
-                    BW_list_var[m][0].set(True)
-                case 10:
-                    BW_list_var[m][o].set(False)
-                    BW_list_var[m][1].set(True)
-                case 15:
-                    BW_list_var[m][o].set(False)
-                    BW_list_var[m][2].set(True)
-                case 20:
-                    BW_list_var[m][o].set(False)
-                    BW_list_var[m][3].set(True)
+        case 5:
+            Specific_BW_selection(Band_list, 0, state, BW_list_var)
+        case 10:
+            Specific_BW_selection(Band_list, 1, state, BW_list_var)
+        case 15:
+            Specific_BW_selection(Band_list, 2, state, BW_list_var)
+        case 20:
+            Specific_BW_selection(Band_list, 3, state, BW_list_var)
+        case 25:
+            Specific_BW_selection(Band_list, 4, state, BW_list_var)
+        case 30:
+            Specific_BW_selection(Band_list, 5, state, BW_list_var)
+        case 35:
+            Specific_BW_selection(Band_list, 6, state, BW_list_var)
+        case 40:
+            Specific_BW_selection(Band_list, 7, state, BW_list_var)
+        case 45:
+            Specific_BW_selection(Band_list, 8, state, BW_list_var)
+        case 50:
+            Specific_BW_selection(Band_list, 9, state, BW_list_var)
+        case 60:
+            Specific_BW_selection(Band_list, 10, state, BW_list_var)
+        case 70:
+            Specific_BW_selection(Band_list, 11, state, BW_list_var)
+        case 80:
+            Specific_BW_selection(Band_list, 12, state, BW_list_var)
+        case 90:
+            Specific_BW_selection(Band_list, 13, state, BW_list_var)
+        case 100:
+            Specific_BW_selection(Band_list, 14, state, BW_list_var)
+
+
+def Specific_BW_selection(Band_list, BW_number, state, BW_list_var):
+    for m, n in enumerate(Band_list):
+        for o, p in enumerate(Band_list.get(n)):
+            BW_list_var[m][o].set(False)
+
+    for m, n in enumerate(Band_list):
+        if state[m][BW_number] == "disabled":
+            pass
+        else:
+            BW_list_var[m][BW_number].set(True)
 
 
 def BW_setting_ok(Band_list, BW_list_var):
