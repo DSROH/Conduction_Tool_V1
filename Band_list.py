@@ -534,10 +534,16 @@ def BW_setting(v):
             ps_y = pos_y1 + 35
             Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
 
+        Btn_clr_x = max(geom_max_x) - 115
+        Btn_clr_y = max(geom_max_y) + 70
         Btn_all_x = max(geom_max_x) - 50
         Btn_all_y = max(geom_max_y) + 70
         Btn_ok_x = max(geom_max_x)
         Btn_ok_y = max(geom_max_y) + 70
+
+        Btn_clr = ttkbst.Button(ChildWin_bw, text="Clear", bootstyle="info")
+        Btn_clr.place(x=Btn_clr_x, y=Btn_clr_y, width=60, height=30)
+        Btn_clr.config(command=lambda: BW_clear(Band_list, BW_list_var))
 
         ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
 
@@ -556,10 +562,16 @@ def BW_setting(v):
             ps_y = pos_y1 + 35
             Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
 
+        Btn_clr_x = max(geom_max_x) - 115
+        Btn_clr_y = max(geom_max_y) + 70
         Btn_all_x = max(geom_max_x) - 50
         Btn_all_y = max(geom_max_y) + 70
         Btn_ok_x = max(geom_max_x)
         Btn_ok_y = max(geom_max_y) + 70
+
+        Btn_clr = ttkbst.Button(ChildWin_bw, text="Clear", bootstyle="info")
+        Btn_clr.place(x=Btn_clr_x, y=Btn_clr_y, width=60, height=30)
+        Btn_clr.config(command=lambda: BW_clear(Band_list, BW_list_var))
 
         ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
 
@@ -597,47 +609,59 @@ def BW_check(bw_var, Band_list, BW_Label, BW_list_var):
                         else:
                             BW_list_var[m][o].set(True)
         case 5:
-            Specific_BW_selection(Band_list, 0, state, BW_list_var)
+            Specific_BW_selection(Band_list, 0, state, chk, BW_list_var)
         case 10:
-            Specific_BW_selection(Band_list, 1, state, BW_list_var)
+            Specific_BW_selection(Band_list, 1, state, chk, BW_list_var)
         case 15:
-            Specific_BW_selection(Band_list, 2, state, BW_list_var)
+            Specific_BW_selection(Band_list, 2, state, chk, BW_list_var)
         case 20:
-            Specific_BW_selection(Band_list, 3, state, BW_list_var)
+            Specific_BW_selection(Band_list, 3, state, chk, BW_list_var)
         case 25:
-            Specific_BW_selection(Band_list, 4, state, BW_list_var)
+            Specific_BW_selection(Band_list, 4, state, chk, BW_list_var)
         case 30:
-            Specific_BW_selection(Band_list, 5, state, BW_list_var)
+            Specific_BW_selection(Band_list, 5, state, chk, BW_list_var)
         case 35:
-            Specific_BW_selection(Band_list, 6, state, BW_list_var)
+            Specific_BW_selection(Band_list, 6, state, chk, BW_list_var)
         case 40:
-            Specific_BW_selection(Band_list, 7, state, BW_list_var)
+            Specific_BW_selection(Band_list, 7, state, chk, BW_list_var)
         case 45:
-            Specific_BW_selection(Band_list, 8, state, BW_list_var)
+            Specific_BW_selection(Band_list, 8, state, chk, BW_list_var)
         case 50:
-            Specific_BW_selection(Band_list, 9, state, BW_list_var)
+            Specific_BW_selection(Band_list, 9, state, chk, BW_list_var)
         case 60:
-            Specific_BW_selection(Band_list, 10, state, BW_list_var)
+            Specific_BW_selection(Band_list, 10, state, chk, BW_list_var)
         case 70:
-            Specific_BW_selection(Band_list, 11, state, BW_list_var)
+            Specific_BW_selection(Band_list, 11, state, chk, BW_list_var)
         case 80:
-            Specific_BW_selection(Band_list, 12, state, BW_list_var)
+            Specific_BW_selection(Band_list, 12, state, chk, BW_list_var)
         case 90:
-            Specific_BW_selection(Band_list, 13, state, BW_list_var)
+            Specific_BW_selection(Band_list, 13, state, chk, BW_list_var)
         case 100:
-            Specific_BW_selection(Band_list, 14, state, BW_list_var)
+            Specific_BW_selection(Band_list, 14, state, chk, BW_list_var)
 
 
-def Specific_BW_selection(Band_list, BW_number, state, BW_list_var):
+def Specific_BW_selection(Band_list, BW_number, state, chk, BW_list_var):
+
+    if all(chk):
+        for m, n in enumerate(Band_list):
+            for o, p in enumerate(Band_list.get(n)):
+                BW_list_var[m][o].set(False)
+
+    for m, n in enumerate(Band_list):
+        try:
+            if state[m][BW_number] == "disabled":
+                pass
+            else:
+                BW_list_var[m][BW_number].set(True)
+        except:
+            # print(f"m={m}, n={n} list index out of range")
+            pass
+
+
+def BW_clear(Band_list, BW_list_var):
     for m, n in enumerate(Band_list):
         for o, p in enumerate(Band_list.get(n)):
             BW_list_var[m][o].set(False)
-
-    for m, n in enumerate(Band_list):
-        if state[m][BW_number] == "disabled":
-            pass
-        else:
-            BW_list_var[m][BW_number].set(True)
 
 
 def BW_setting_ok(Band_list, BW_list_var):

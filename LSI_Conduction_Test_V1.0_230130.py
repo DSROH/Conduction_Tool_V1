@@ -1,24 +1,23 @@
 # %%
 import tkinter as tk
-import ttkbootstrap as ttkbst
-from ttkbootstrap.constants import *
 import tkinter.scrolledtext as st
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-
 import matplotlib.pyplot as plt
+import ttkbootstrap as ttkbst
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+                                               NavigationToolbar2Tk)
+from ttkbootstrap.constants import *
 
 # plt.rcParams.update({'font.size': 8})
 plt.rc("xtick", labelsize=8)
 plt.rc("ytick", labelsize=8)
+import threading
+
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
-import threading
-
-import Function as func
 import Band_list as blist
-
+import Function as func
 
 # %%
 CB_list, PS_list, CP_list = func.Equipment_scan()
@@ -35,11 +34,9 @@ def change_theme():
 
 themes = Win_GUI.style.theme_names()
 
-
 # %%
 Left_frame = ttkbst.Frame(Win_GUI)
 Left_frame.place(x=0, y=0, width=765, height=730)
-
 
 # %%
 canvas_frame = ttkbst.Labelframe(Left_frame, text="Canvas")  # Frame의 크기 따로 지정하지 않고, figsize로 결정됨
@@ -76,7 +73,6 @@ plt.tight_layout()
 
 plt.close()
 
-
 # %%
 Scrolled_txt_frame = ttkbst.Frame(Win_GUI)
 Scrolled_txt_frame.place(x=770, y=5, width=850, height=675)
@@ -90,7 +86,6 @@ Auth_frame.place(x=770, y=685, width=850, height=40)
 
 Author = ttkbst.Label(Auth_frame, text="dongsub.roh@samsung.com")
 Author.place(x=690, y=10)
-
 
 # %%
 Setting_frame = ttkbst.Frame(Left_frame)
@@ -141,7 +136,6 @@ def on_select(v):
         Chbox_var[count].set(True)
 
 
-
 # %%
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
 Rat_frame.place(x=0, y=0, width=140, height=50)
@@ -176,7 +170,6 @@ Rat_Option3 = ttkbst.Radiobutton(
     command=lambda: on_select(Rat_option_var.get()),
 )
 Rat_Option3.place(x=95, y=6, width=40)
-
 
 # %%
 Ch_frame = ttkbst.Labelframe(Setting_frame, text="Channel")
@@ -238,7 +231,6 @@ Btn_user_defined_ch = ttkbst.Button(Setting_frame, text="Ch(F9)", style="danger.
 Btn_user_defined_ch.place(x=260, y=15, width=60, height=30)
 Win_GUI.bind("<F9>", lambda event: [func_userch()])
 
-
 # %%
 global BW_list
 BW_list = {}
@@ -250,14 +242,12 @@ Btn_bwsetting.place(x=325, y=15, width=70, height=30)
 
 Win_GUI.bind("<F10>", lambda event: [blist.BW_setting(Rat_option_var.get())])
 
-
 # %%
 Pw_option_var = ttkbst.IntVar()
 Btn_pwsetting = ttkbst.Button(Setting_frame, text="PW(F11)", style="danger.TButton", command=func_userch)
 Btn_pwsetting.place(x=400, y=15, width=65, height=30)
 
 Win_GUI.bind("<F11>", lambda event: [func_userch()])
-
 
 # %%
 # Select all 버튼
@@ -277,7 +267,6 @@ Btn_Selecttdd = ttkbst.Button(
 )
 Btn_Selecttdd.place(x=4, y=68, width=50, height=29)
 
-
 # %%
 # 실행 프레임
 Bottom_frame = ttkbst.Frame(Left_frame)
@@ -294,7 +283,6 @@ for t in themes:
 
 theme_options["menu"] = menu
 theme_options.place(x=0, y=5, width=100, height=30)
-
 
 # %%
 Run_mode_var = tk.IntVar()
@@ -344,7 +332,6 @@ APT_Tune = ttkbst.Radiobutton(
     ],
 )
 APT_Tune.place(x=640, y=12)
-
 
 # %%
 def Callback_CB(combo1, Rat_option_var):
@@ -421,7 +408,6 @@ combo4 = ttkbst.Combobox(toolbar_frame, values=CP_list, font=("Calibri", 10))
 combo4.place(x=685, y=5, width=70)
 combo4.bind("<<ComboboxSelected>>", lambda event: [func.Callback_Comport(combo4)])
 
-
 # %%
 MIPI_frame = ttkbst.Labelframe(Setting_frame, text="MIPI")
 MIPI_frame.place(x=470, y=0, width=285, height=170)
@@ -451,7 +437,6 @@ for count, i in enumerate(Mipi_data):
         Mipi_data[i][c].place(x=LB_posx[c], y=LB_posy[i][c], width=30, height=25)
         Mipi_Label[count].place(x=0, y=LB_posy[i][c], width=50, height=25)
 
-
 # %%
 Btn_LB_PAW = ttkbst.Button(
     MIPI_frame,
@@ -468,7 +453,6 @@ Btn_LB_PAR = ttkbst.Button(
     command=lambda: [func.Check_mipi_R(text_area, Mipi_data["LB_PA"], combo4)],
 )
 Btn_LB_PAR.place(x=240, y=5, width=35, height=25)
-
 
 # %%
 Btn_LB_SMW = ttkbst.Button(
@@ -487,7 +471,6 @@ Btn_LB_SMR = ttkbst.Button(
 )
 Btn_LB_SMR.place(x=240, y=40, width=35, height=25)
 
-
 # %%
 Btn_OMHW = ttkbst.Button(
     MIPI_frame,
@@ -505,7 +488,6 @@ Btn_OMHR = ttkbst.Button(
 )
 Btn_OMHR.place(x=240, y=75, width=35, height=25)
 
-
 # %%
 Btn_OMH_SMW = ttkbst.Button(
     MIPI_frame,
@@ -522,7 +504,6 @@ Btn_OMH_SMR = ttkbst.Button(
     command=lambda: [func.Check_mipi_R(text_area, Mipi_data["OMH_SM"], combo4)],
 )
 Btn_OMH_SMR.place(x=240, y=110, width=35, height=25)
-
 
 # %%
 # Cal log 파일 선택
@@ -544,7 +525,6 @@ Btn_add_file = ttkbst.Button(
 Btn_add_file.place(x=5, y=7, width=110, height=30)
 Win_GUI.bind("<F12>", lambda event: [func.add_file(log_path)])
 
-
 # %%
 Btn_power = ttkbst.Button(
     path_frame,
@@ -556,7 +536,6 @@ Win_GUI.bind(
     "<F4>",
     lambda event: [threading.Thread(target=func.Power_on, args=(combo2, combo3, combo4, text_area)).start()],
 )
-
 
 # %%
 Btn_strt = ttkbst.Button(
@@ -623,7 +602,6 @@ Win_GUI.bind(
     ],
 )
 
-
 # %%
 # combo1.current(0)
 # combo2.current(0)
@@ -657,10 +635,6 @@ Win_GUI.bind(
     ],
 )
 
-
 # %%
 Win_GUI.resizable(False, False)
 Win_GUI.mainloop()
-
-
-
