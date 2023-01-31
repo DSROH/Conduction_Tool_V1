@@ -8,10 +8,6 @@ import Function as func
 pd.options.display.float_format = "{:.5f}".format
 
 
-def testcode():
-    pass
-
-
 def Set_factolog(dut, text_area):
     response = dut.at_write("AT+MODECHAN=0,2")
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")

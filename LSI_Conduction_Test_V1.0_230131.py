@@ -135,6 +135,7 @@ def on_select(v):
         Chkbox[count].place(x=pos_x, y=pos_y, width=50)
         Chbox_var[count].set(True)
 
+
 # %%
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
 Rat_frame.place(x=0, y=0, width=140, height=50)
@@ -377,6 +378,7 @@ def Callback_CB(combo1, Rat_option_var):
                 Rat_Option3.config(state=tk.NORMAL),  # NR enable
             ],
         )
+
 
 # %%
 toolbar_frame = ttkbst.Frame(Left_frame)
@@ -636,5 +638,3 @@ Win_GUI.bind(
 # %%
 Win_GUI.resizable(False, False)
 Win_GUI.mainloop()
-
-
