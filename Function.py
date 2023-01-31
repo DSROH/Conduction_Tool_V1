@@ -26,6 +26,7 @@ import Tx_measure_Apt as Apt
 import Tx_measure_Nonsig as Nonsig
 import Tx_measure_Signaling as Sig
 
+
 font_style = Font(
     name="Calibri",
     size=10,

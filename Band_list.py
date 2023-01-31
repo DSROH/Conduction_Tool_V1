@@ -697,3 +697,7 @@ def BW_setting_ok(Band_list, BW_list_var):
     ChildWin_bw.destroy()
 
     return BW_list
+
+
+def testcode():
+    pass
