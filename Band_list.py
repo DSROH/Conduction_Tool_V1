@@ -517,12 +517,16 @@ def BW_setting(v):
         Btn_ok_x = max(geom_max_x) + 15
         Btn_ok_y = max(geom_max_y) + 40
 
-        ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) + 80}")
+        win_width = max(geom_max_x) + 55
+        win_height = max(geom_max_y) + 80
+        ChildWin_bw.geometry(f"{win_width}x{win_height}")
 
     elif v == 2:
-        Btn_BW = [None, None, None, None]
+        BW = [5, 10, 15, 20]
+        Btn_BW = [None] * len(BW)
         bw_var = ttkbst.IntVar()
-        for counter, i in enumerate(range(5, 21, 5)):
+
+        for counter, i in enumerate(BW):
             Btn_BW[counter] = ttkbst.Radiobutton(
                 ChildWin_bw,
                 text=i,
@@ -545,12 +549,16 @@ def BW_setting(v):
         Btn_clr.place(x=Btn_clr_x, y=Btn_clr_y, width=60, height=30)
         Btn_clr.config(command=lambda: BW_clear(Band_list, BW_list_var))
 
-        ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
+        win_width = max(geom_max_x) + 55
+        win_height = max(geom_max_y) + 110
+        ChildWin_bw.geometry(f"{win_width}x{win_height}")
 
     elif v == 3:
-        Btn_BW = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        BW = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+        Btn_BW = [None] * len(BW)
         bw_var = ttkbst.IntVar()
-        for counter, i in enumerate([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]):
+
+        for counter, i in enumerate(BW):
             Btn_BW[counter] = ttkbst.Radiobutton(
                 ChildWin_bw,
                 text=i,
@@ -573,7 +581,9 @@ def BW_setting(v):
         Btn_clr.place(x=Btn_clr_x, y=Btn_clr_y, width=60, height=30)
         Btn_clr.config(command=lambda: BW_clear(Band_list, BW_list_var))
 
-        ChildWin_bw.geometry(f"{max(geom_max_x) + 55}x{max(geom_max_y) +110}")
+        win_width = max(geom_max_x) + 55
+        win_height = max(geom_max_y) + 110
+        ChildWin_bw.geometry(f"{win_width}x{win_height}")
 
     Btn_all = ttkbst.Button(ChildWin_bw, text="All", bootstyle="info")
     Btn_all.place(x=Btn_all_x, y=Btn_all_y, width=45, height=30)
@@ -582,6 +592,13 @@ def BW_setting(v):
     Btn_ok = ttkbst.Button(ChildWin_bw, text="OK", bootstyle="info")
     Btn_ok.place(x=Btn_ok_x, y=Btn_ok_y, width=45, height=30)
     Btn_ok.config(command=lambda: BW_setting_ok(Band_list, BW_list_var))
+
+    scr_width = int(ChildWin_bw.winfo_screenwidth())
+    scr_height = int(ChildWin_bw.winfo_screenheight())
+    x = int((scr_width - win_width) / 2)
+    y = int((scr_height - win_height) / 2)
+
+    ChildWin_bw.geometry(f"{win_width}x{win_height}+{x}+{y}")
 
 
 def BW_check(bw_var, Band_list, BW_Label, BW_list_var):

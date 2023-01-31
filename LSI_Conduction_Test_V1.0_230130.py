@@ -1,23 +1,23 @@
 # %%
 import tkinter as tk
+import ttkbootstrap as ttkbst
+from ttkbootstrap.constants import *
 import tkinter.scrolledtext as st
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
 import matplotlib.pyplot as plt
-import ttkbootstrap as ttkbst
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                               NavigationToolbar2Tk)
-from ttkbootstrap.constants import *
 
 # plt.rcParams.update({'font.size': 8})
 plt.rc("xtick", labelsize=8)
 plt.rc("ytick", labelsize=8)
-import threading
-
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
-import Band_list as blist
+import threading
+
 import Function as func
+import Band_list as blist
 
 # %%
 CB_list, PS_list, CP_list = func.Equipment_scan()
@@ -134,7 +134,6 @@ def on_select(v):
             pos_y = 5 + 35 * (count // 7)
         Chkbox[count].place(x=pos_x, y=pos_y, width=50)
         Chbox_var[count].set(True)
-
 
 # %%
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
@@ -378,7 +377,6 @@ def Callback_CB(combo1, Rat_option_var):
                 Rat_Option3.config(state=tk.NORMAL),  # NR enable
             ],
         )
-
 
 # %%
 toolbar_frame = ttkbst.Frame(Left_frame)
@@ -638,3 +636,5 @@ Win_GUI.bind(
 # %%
 Win_GUI.resizable(False, False)
 Win_GUI.mainloop()
+
+
