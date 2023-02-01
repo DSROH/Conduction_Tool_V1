@@ -399,6 +399,8 @@ def BW_setting(v):
     global BW_list_var
     global BW_Label
 
+    BW_list = {}
+
     if v == 1:  # 3G
         Band_list = {
             1: [5],
@@ -591,7 +593,7 @@ def BW_setting(v):
 
     Btn_ok = ttkbst.Button(ChildWin_bw, text="OK", bootstyle="info")
     Btn_ok.place(x=Btn_ok_x, y=Btn_ok_y, width=45, height=30)
-    Btn_ok.config(command=lambda: BW_setting_ok(Band_list, BW_list_var))
+    Btn_ok.config(command=lambda: BW_list.update(BW_setting_ok(Band_list, BW_list_var)))
 
     scr_width = int(ChildWin_bw.winfo_screenwidth())
     scr_height = int(ChildWin_bw.winfo_screenheight())
@@ -599,6 +601,10 @@ def BW_setting(v):
     y = int((scr_height - win_height) / 2)
 
     ChildWin_bw.geometry(f"{win_width}x{win_height}+{x}+{y}")
+
+    print(f"BW_list in BW_setting = {BW_list}")
+
+    return BW_list
 
 
 def BW_check(bw_var, Band_list, BW_Label, BW_list_var):
@@ -695,5 +701,7 @@ def BW_setting_ok(Band_list, BW_list_var):
         for counter, (key, value) in enumerate(Band_list.items())
     }
     ChildWin_bw.destroy()
+
+    print(f"BW_list in BW_setting_ok = {BW_list}")
 
     return BW_list

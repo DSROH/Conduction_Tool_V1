@@ -232,7 +232,6 @@ Btn_user_defined_ch.place(x=260, y=15, width=60, height=30)
 Win_GUI.bind("<F9>", lambda event: [func_userch()])
 
 # %%
-global BW_list
 BW_list = {}
 
 Btn_bwsetting = ttkbst.Button(
@@ -240,7 +239,7 @@ Btn_bwsetting = ttkbst.Button(
 )
 Btn_bwsetting.place(x=325, y=15, width=70, height=30)
 
-Win_GUI.bind("<F10>", lambda event: [blist.BW_setting(Rat_option_var.get())])
+Win_GUI.bind("<F10>", lambda: BW_list.update([blist.BW_setting(Rat_option_var.get())]))
 
 # %%
 Pw_option_var = ttkbst.IntVar()
@@ -556,7 +555,6 @@ Btn_strt = ttkbst.Button(
                 User_defined_band,
                 User_defined_ch,
                 Chbox_var,
-                BW_list,
                 Pw_option_var,
                 Mipi_data,
                 canvas,
@@ -588,7 +586,6 @@ Win_GUI.bind(
                 User_defined_band,
                 User_defined_ch,
                 Chbox_var,
-                BW_list,
                 Pw_option_var,
                 Mipi_data,
                 canvas,
