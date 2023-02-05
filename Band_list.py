@@ -702,6 +702,4 @@ def BW_setting_ok(Band_list, BW_list_var):
     }
     ChildWin_bw.destroy()
 
-    print(f"BW_list in BW_setting_ok = {BW_list}")
-
     return BW_list
