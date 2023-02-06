@@ -260,7 +260,7 @@ def Start(
     User_defined_band,
     User_defined_ch,
     Chbox_var,
-    BWbox_var,
+    BW_list,
     Pw_option_var,
     Mipi_data,
     canvas,
@@ -270,6 +270,8 @@ def Start(
     ax3,
     text_area,
 ):
+
+    print(f"BW list = {BW_list}")
 
     try:
         Selected_path = log_path.get()
@@ -323,7 +325,7 @@ def Start(
         Sig.Callbox_reset(Selected_path, Equip, Callbox, text_area)
 
         Band_list = Check_bandlist(
-            Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Chbox_var, BWbox_var
+            Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Chbox_var, BW_list  # BWbox_var
         )
         pwr_levels = Check_pwr_lvs(Pw_option_var)
 

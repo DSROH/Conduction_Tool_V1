@@ -392,14 +392,75 @@ def Check_pwr_lvs(Pw_option_var):
     return pwr_levels
 
 
-def BW_setting(v):
+def Init_BW_Setting(v):
+
+    if v == 1:  # 3G
+        BW_list = {
+            1: [5],
+            2: [5],
+            4: [5],
+            5: [5],
+            8: [5],
+        }
+
+    elif v == 2:  # LTE
+        BW_list = {
+            1: [10],
+            2: [10],
+            3: [10],
+            4: [10],
+            5: [10],
+            7: [10],
+            8: [10],
+            12: [10],
+            13: [10],
+            17: [10],
+            18: [10],
+            19: [10],
+            20: [10],
+            25: [10],
+            26: [10],
+            28: [10],
+            66: [10],
+            38: [10],
+            39: [10],
+            40: [10],
+            41: [10],
+        }
+
+    elif v == 3:  # NR
+        BW_list = {
+            1: [10],
+            2: [10],
+            3: [10],
+            5: [10],
+            7: [10],
+            8: [10],
+            12: [10],
+            13: [10],
+            18: [10],
+            20: [10],
+            25: [10],
+            26: [10],
+            28: [10],
+            66: [10],
+            38: [10],
+            39: [10],
+            40: [10],
+            41: [10],
+            77: [10],
+            78: [10],
+        }
+
+    return BW_list
+
+
+def BW_setting(v, BW_list):
 
     global ChildWin_bw
     global Band_list_var
     global BW_list_var
     global BW_Label
-
-    BW_list = {}
 
     if v == 1:  # 3G
         Band_list = {
@@ -593,16 +654,13 @@ def BW_setting(v):
 
     Btn_ok = ttkbst.Button(ChildWin_bw, text="OK", bootstyle="info")
     Btn_ok.place(x=Btn_ok_x, y=Btn_ok_y, width=45, height=30)
-    Btn_ok.config(command=lambda: BW_list.update(BW_setting_ok(Band_list, BW_list_var)))
+    Btn_ok.config(command=lambda: [BW_list.clear(), BW_list.update(BW_setting_ok(Band_list, BW_list_var))])
 
     scr_width = int(ChildWin_bw.winfo_screenwidth())
     scr_height = int(ChildWin_bw.winfo_screenheight())
     x = int((scr_width - win_width) / 2)
     y = int((scr_height - win_height) / 2)
-
     ChildWin_bw.geometry(f"{win_width}x{win_height}+{x}+{y}")
-
-    print(f"BW_list in BW_setting = {BW_list}")
 
     return BW_list
 
@@ -696,10 +754,11 @@ def BW_setting_ok(Band_list, BW_list_var):
                 bwlist[count].append(False)
             else:
                 bwlist[count].append(bw.get())
-    BW_list = {
+    Check_list = {
         key: [value[i] for i in range(len(value)) if bwlist[counter][i]]
         for counter, (key, value) in enumerate(Band_list.items())
     }
+    Checked_BW_list = dict([(k, v) for k, v in Check_list.items() if v != []])
     ChildWin_bw.destroy()
 
-    return BW_list
+    return Checked_BW_list

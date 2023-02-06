@@ -537,6 +537,30 @@ Win_GUI.bind(
 )
 
 # %%
+# combo1.current(0)
+# combo2.current(0)
+# combo3.current(1)
+# combo4.current(0)
+
+Rat_Option2.invoke()
+Ch_option_var.set(1)  # 1로 세팅만 한다.
+Pw_option_var.set(1)
+Run_mode_var.set(1)
+
+# %%
+BW_list = blist.Init_BW_Setting(Rat_option_var.get())
+
+Btn_bwsetting = ttkbst.Button(
+    Setting_frame,
+    text="BW(F10)",
+    style="danger.TButton",
+    command=lambda: [BW_list.update(blist.BW_setting(Rat_option_var.get(), BW_list))],
+)
+Btn_bwsetting.place(x=325, y=15, width=70, height=30)
+
+Win_GUI.bind("<F10>", lambda: [BW_list.update(blist.BW_setting(Rat_option_var.get(), BW_list))])
+
+# %%
 Btn_strt = ttkbst.Button(
     path_frame,
     text="TEST Start (F5)",
@@ -555,6 +579,7 @@ Btn_strt = ttkbst.Button(
                 User_defined_band,
                 User_defined_ch,
                 Chbox_var,
+                BW_list,
                 Pw_option_var,
                 Mipi_data,
                 canvas,
@@ -586,6 +611,7 @@ Win_GUI.bind(
                 User_defined_band,
                 User_defined_ch,
                 Chbox_var,
+                BW_list,
                 Pw_option_var,
                 Mipi_data,
                 canvas,
@@ -600,16 +626,6 @@ Win_GUI.bind(
 )
 
 # %%
-# combo1.current(0)
-# combo2.current(0)
-# combo3.current(1)
-# combo4.current(0)
-
-Rat_Option2.invoke()
-Ch_option_var.set(1)  # 1로 세팅만 한다.
-Pw_option_var.set(1)
-Run_mode_var.set(1)
-
 Win_GUI.bind(
     "<F1>",
     lambda event: [
