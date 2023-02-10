@@ -13,11 +13,8 @@ def Apt_tune(Callbox, E3632a_1, E3632a_2, pwr, band, mipi):
 def Tune_bias():
     pass
 
-
 def Tune_voltage():
     pass
-
-
 def Dispaly_TX_log(pwr, PA_mipi_read, SM_mipi_read, Callbox, E3632a_1, E3632a_2, text_area):
     Callbox.write("INIT:NRS:MEAS:MEV")
     aclr = Callbox.query("FETC:NRS:MEAS:MEV:ACLR:AVER?").split(",")

@@ -8,7 +8,6 @@ import pandas as pd
 import Function as func
 import Tx_measure_Nonsig as Nonsig
 
-
 def Callbox_reset(Selected_path, Equip, Callbox, text_area):
     Callbox.write("SYST:RES:ALL")
     text_area.insert(tk.END, f"RESET Call Box {Equip}\n")
