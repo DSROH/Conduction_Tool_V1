@@ -8,17 +8,35 @@ def merge_dic(x, y):
     return z
 
 
-def Check_bandlist(Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Chbox_var, BWbox_var):
+def dict_compare_list(list_a, dict_a):
+    keys_to_remove = [key for key in dict_a.keys() if key not in list_a]
+    for key in keys_to_remove:
+        dict_a.pop(key)
+    return dict_a
+
+
+def longest_value(dict_a):
+    max_length = max(len(value) for value in dict_a.values())
+    longest_values = [value for key, value in dict_a.items() if len(value) == max_length]
+    if len(longest_values) == 1:
+        return longest_values[0]
+    else:
+        values = list(dict_a.values())
+        values.sort(key=len, reverse=True)
+        return values[0]
+
+
+def Check_testband(Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_box_var):
     W_list = [1, 2, 4, 5, 8]
     B_list = [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41]
     N_list = [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78]
 
     if Rat_option_var.get() == 1:  # 3G
         Wlist = []
-        band_list = {}
+        Test_band_ch_list = {}
 
         for c, i in enumerate(W_list):
-            if Chbox_var[c].get() == True:
+            if Band_Select_box_var[c].get() == True:
                 Wlist.append(i)
         key = dict.fromkeys(Wlist)
 
@@ -51,18 +69,18 @@ def Check_bandlist(Rat_option_var, Ch_option_var, User_defined_band, User_define
 
         for k in key:
             if k in val.keys():
-                band_list[k] = val[k]
+                Test_band_ch_list[k] = val[k]
 
     elif Rat_option_var.get() == 2:  # LTE
         Blist = []
-        band_list = {}
+        Test_band_ch_list = {}
         N_of_Channel = Ch_option_var.get()
 
         if N_of_Channel == 3:
             key = User_defined_band[1:]
         else:
             for c, i in enumerate(B_list):
-                if Chbox_var[c].get() == True:
+                if Band_Select_box_var[c].get() == True:
                     Blist.append(i)
             key = dict.fromkeys(Blist)
 
@@ -124,14 +142,14 @@ def Check_bandlist(Rat_option_var, Ch_option_var, User_defined_band, User_define
 
         for k in key:
             if k in val.keys():
-                band_list[k] = val[k]
+                Test_band_ch_list[k] = val[k]
 
     elif Rat_option_var.get() == 3:  # NR
         Nlist = []
-        band_list = {}
+        Test_band_ch_list = {}
 
         for c, i in enumerate(N_list):
-            if BWbox_var[c].get() == True:
+            if Band_Select_box_var[c].get() == True:
                 Nlist.append(i)
         key = dict.fromkeys(Nlist)
 
@@ -196,59 +214,197 @@ def Check_bandlist(Rat_option_var, Ch_option_var, User_defined_band, User_define
 
         for k in key:
             if k in val.keys():
-                band_list[k] = val[k]
+                Test_band_ch_list[k] = val[k]
 
-    return band_list
+    return Test_band_ch_list
 
 
-def Selectall_band(BWbox_var):
+def Selectall_band(Band_Select_box_var):
     chk = []
-    for c, i in enumerate(BWbox_var):
-        chk.append(BWbox_var[c].get())
+    for c, i in enumerate(Band_Select_box_var):
+        chk.append(Band_Select_box_var[c].get())
 
     if all(chk):
         # 한개라도 체크되있다면, 전체 체크 해제
-        for count, j in enumerate(BWbox_var):
-            BWbox_var[count].set(False)
+        for count, j in enumerate(Band_Select_box_var):
+            Band_Select_box_var[count].set(False)
     else:
-        for count, j in enumerate(BWbox_var):
-            BWbox_var[count].set(True)
+        for count, j in enumerate(Band_Select_box_var):
+            Band_Select_box_var[count].set(True)
 
 
-def Selectfdd_band(Rat_option_var, BWbox_var):
+def Selectfdd_band(Rat_option_var, Band_Select_box_var):
     if Rat_option_var.get() == 2:  # LTE
         Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-        for c, i in enumerate(BWbox_var):
-            # BWbox_var[c].set(not BWbox_var[c].get())
+        for c, i in enumerate(Band_Select_box_var):
+            # Band_Select_box_var[c].set(not Band_Select_box_var[c].get())
             if c in Select_list:
-                BWbox_var[c].set(True)
+                Band_Select_box_var[c].set(True)
             else:
-                BWbox_var[c].set(False)
+                Band_Select_box_var[c].set(False)
     elif Rat_option_var.get() == 3:  # NR
         Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        for c, i in enumerate(BWbox_var):
-            # BWbox_var[c].set(not BWbox_var[c].get())
+        for c, i in enumerate(Band_Select_box_var):
+            # Band_Select_box_var[c].set(not Band_Select_box_var[c].get())
             if c in Select_list:
-                BWbox_var[c].set(True)
+                Band_Select_box_var[c].set(True)
             else:
-                BWbox_var[c].set(False)
+                Band_Select_box_var[c].set(False)
 
 
-def Selecttdd_band(Rat_option_var, BWbox_var):
+def Selecttdd_band(Rat_option_var, Band_Select_box_var):
     if Rat_option_var.get() == 2:  # LTE
         Select_list = [17, 18, 19, 20]
-        for c, i in enumerate(BWbox_var):
+        for c, i in enumerate(Band_Select_box_var):
             if c in Select_list:
-                BWbox_var[c].set(True)
+                Band_Select_box_var[c].set(True)
             else:
-                BWbox_var[c].set(False)
+                Band_Select_box_var[c].set(False)
     elif Rat_option_var.get() == 3:  # NR
         Select_list = [13, 14, 15, 16, 17, 18]
-        for c, i in enumerate(BWbox_var):
+        for c, i in enumerate(Band_Select_box_var):
             if c in Select_list:
-                BWbox_var[c].set(True)
+                Band_Select_box_var[c].set(True)
             else:
-                BWbox_var[c].set(False)
+                Band_Select_box_var[c].set(False)
+
+
+def Num_RB(rat, band, BW):
+    if rat == "LTE":
+        match BW:
+            case 5:
+                NRB = 25
+                outfull_offset = 0
+                PRB = 8
+                infull_offset = 0
+            case 10:
+                NRB = 50
+                outfull_offset = 0
+                PRB = 12
+                infull_offset = 0
+            case 15:
+                NRB = 75
+                outfull_offset = 0
+                PRB = 16
+                infull_offset = 0
+            case 20:
+                NRB = 100
+                outfull_offset = 0
+                PRB = 18
+                infull_offset = 0
+
+    elif rat == "NR":
+        if band in [38, 39, 40, 41, 77, 78]:
+            match BW:
+                case 5:
+                    NRB = 25
+                    outfull_offset = 0
+                    PRB = 5
+                    infull_offset = 2
+                case 10:
+                    NRB = 24
+                    outfull_offset = 0
+                    PRB = 12
+                    infull_offset = 6
+                case 15:
+                    NRB = 36
+                    outfull_offset = 0
+                    PRB = 18
+                    infull_offset = 9
+                case 20:
+                    NRB = 50
+                    outfull_offset = 0
+                    PRB = 25
+                    infull_offset = 12
+                case 25:
+                    NRB = 64
+                    outfull_offset = 0
+                    PRB = 32
+                    infull_offset = 16
+                case 30:
+                    NRB = 75
+                    outfull_offset = 0
+                    PRB = 36
+                    infull_offset = 18
+                case 40:
+                    NRB = 100
+                    outfull_offset = 0
+                    PRB = 50
+                    infull_offset = 25
+                case 50:
+                    NRB = 128
+                    outfull_offset = 0
+                    PRB = 64
+                    infull_offset = 32
+                case 60:
+                    NRB = 162
+                    outfull_offset = 0
+                    PRB = 81
+                    infull_offset = 40
+                case 70:
+                    NRB = 180
+                    outfull_offset = 0
+                    PRB = 90
+                    infull_offset = 45
+                case 80:
+                    NRB = 216
+                    outfull_offset = 0
+                    PRB = 108
+                    infull_offset = 54
+                case 90:
+                    NRB = 243
+                    outfull_offset = 0
+                    PRB = 120
+                    infull_offset = 60
+                case 100:
+                    NRB = 270
+                    outfull_offset = 0
+                    PRB = 135
+                    infull_offset = 67
+        else:
+            match BW:
+                case 5:
+                    NRB = 25
+                    outfull_offset = 0
+                    PRB = 12
+                    infull_offset = 6
+                case 10:
+                    NRB = 50
+                    outfull_offset = 0
+                    PRB = 25
+                    infull_offset = 12
+                case 15:
+                    NRB = 75
+                    outfull_offset = 0
+                    PRB = 36
+                    infull_offset = 18
+                case 20:
+                    NRB = 100
+                    outfull_offset = 0
+                    PRB = 50
+                    infull_offset = 25
+                case 25:
+                    NRB = 128
+                    outfull_offset = 0
+                    PRB = 64
+                    infull_offset = 32
+                case 30:
+                    NRB = 160
+                    outfull_offset = 0
+                    PRB = 80
+                    infull_offset = 40
+                case 40:
+                    NRB = 216
+                    outfull_offset = 0
+                    PRB = 108
+                    infull_offset = 54
+                case 50:
+                    NRB = 270
+                    outfull_offset = 0
+                    PRB = 135
+                    infull_offset = 67
+
+    return NRB, outfull_offset, PRB, infull_offset
 
 
 def channel_converter(band, channel):
@@ -392,7 +548,7 @@ def Check_pwr_lvs(Pw_option_var):
     return pwr_levels
 
 
-def Init_BW_Setting(v):
+def Init_BW_Setting(v, Band_index, Band_Select_box_var):
 
     if v == 1:  # 3G
         BW_list = {
@@ -455,12 +611,17 @@ def Init_BW_Setting(v):
     return BW_list
 
 
-def BW_setting(v, BW_list):
+def BW_setting(v, Band_index, Band_Select_box_var, BW_list):
 
     global ChildWin_bw
     global Band_list_var
     global BW_list_var
     global BW_Label
+
+    Active_band = []
+    for c, i in enumerate(Band_Select_box_var):
+        if Band_Select_box_var[c].get():
+            Active_band.append(int(Band_index[c][1:]))
 
     if v == 1:  # 3G
         Band_list = {
@@ -478,17 +639,17 @@ def BW_setting(v, BW_list):
             2: [5, 10, 15, 20],
             3: [5, 10, 15, 20],
             4: [5, 10, 15, 20],
-            5: [5, 10, 15, 20],
+            5: [5, 10],
             7: [5, 10, 15, 20],
-            8: [5, 10, 15, 20],
-            12: [5, 10, 15, 20],
-            13: [5, 10, 15, 20],
-            17: [5, 10, 15, 20],
-            18: [5, 10, 15, 20],
-            19: [5, 10, 15, 20],
+            8: [5, 10],
+            12: [5, 10],
+            13: [5, 10],
+            17: [5, 10],
+            18: [5, 10, 15],
+            19: [5, 10, 15],
             20: [5, 10, 15, 20],
             25: [5, 10, 15, 20],
-            26: [5, 10, 15, 20],
+            26: [5, 10, 15],
             28: [5, 10, 15, 20],
             66: [5, 10, 15, 20],
             38: [5, 10, 15, 20],
@@ -522,6 +683,8 @@ def BW_setting(v, BW_list):
             78: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
         }
         rat = "n"
+
+    Band_list = dict_compare_list(Active_band, Band_list)
 
     try:
         ChildWin_bw.destroy()
@@ -573,6 +736,9 @@ def BW_setting(v, BW_list):
                 elif (i in [77, 78]) & (k in [5, 35, 45]):
                     BW_Label[count][c].config(state=tk.DISABLED)
                     BW_list_var[count][c].set(False)
+                elif k in [35, 45]:
+                    BW_Label[count][c].config(state=tk.DISABLED)
+                    BW_list_var[count][c].set(False)
 
     if v == 1:
         Btn_all_x = max(geom_max_x) - 40
@@ -584,8 +750,8 @@ def BW_setting(v, BW_list):
         win_height = max(geom_max_y) + 80
         ChildWin_bw.geometry(f"{win_width}x{win_height}")
 
-    elif v == 2:
-        BW = [5, 10, 15, 20]
+    elif v == 2 or v == 3:
+        BW = longest_value(Band_list)
         Btn_BW = [None] * len(BW)
         bw_var = ttkbst.IntVar()
 
@@ -597,39 +763,7 @@ def BW_setting(v, BW_list):
                 variable=bw_var,
                 command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
             )
-            ps_x = pos_x2 - 50 * (3 - counter)
-            ps_y = pos_y1 + 35
-            Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
-
-        Btn_clr_x = max(geom_max_x) - 115
-        Btn_clr_y = max(geom_max_y) + 70
-        Btn_all_x = max(geom_max_x) - 50
-        Btn_all_y = max(geom_max_y) + 70
-        Btn_ok_x = max(geom_max_x)
-        Btn_ok_y = max(geom_max_y) + 70
-
-        Btn_clr = ttkbst.Button(ChildWin_bw, text="Clear", bootstyle="info")
-        Btn_clr.place(x=Btn_clr_x, y=Btn_clr_y, width=60, height=30)
-        Btn_clr.config(command=lambda: BW_clear(Band_list, BW_list_var))
-
-        win_width = max(geom_max_x) + 55
-        win_height = max(geom_max_y) + 110
-        ChildWin_bw.geometry(f"{win_width}x{win_height}")
-
-    elif v == 3:
-        BW = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
-        Btn_BW = [None] * len(BW)
-        bw_var = ttkbst.IntVar()
-
-        for counter, i in enumerate(BW):
-            Btn_BW[counter] = ttkbst.Radiobutton(
-                ChildWin_bw,
-                text=i,
-                value=i,
-                variable=bw_var,
-                command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
-            )
-            ps_x = pos_x2 - 50 * (14 - counter)
+            ps_x = max(geom_max_x) - (50 * (len(BW) - 1 - counter))
             ps_y = pos_y1 + 35
             Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
 
@@ -650,7 +784,7 @@ def BW_setting(v, BW_list):
 
     Btn_all = ttkbst.Button(ChildWin_bw, text="All", bootstyle="info")
     Btn_all.place(x=Btn_all_x, y=Btn_all_y, width=45, height=30)
-    Btn_all.config(command=lambda: BW_check(0, Band_list, BW_Label, BW_list_var))
+    Btn_all.config(command=lambda: [BW_check(0, Band_list, BW_Label, BW_list_var)])
 
     Btn_ok = ttkbst.Button(ChildWin_bw, text="OK", bootstyle="info")
     Btn_ok.place(x=Btn_ok_x, y=Btn_ok_y, width=45, height=30)

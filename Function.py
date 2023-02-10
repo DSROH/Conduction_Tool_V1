@@ -26,7 +26,6 @@ import Tx_measure_Apt as Apt
 import Tx_measure_Nonsig as Nonsig
 import Tx_measure_Signaling as Sig
 
-
 font_style = Font(
     name="Calibri",
     size=10,
@@ -121,14 +120,14 @@ def add_file(log_path):
         return
 
 
-def resut_to_excel(result, file_name):
+def resut_to_excel(result, file_name, name_of_sheet):
     if not os.path.exists(file_name):  # 파일이 없으면 쓰기모드
         with pd.ExcelWriter(file_name, mode="w", engine="openpyxl") as writer:
-            result.to_excel(writer, sheet_name=f"{result.columns.names[0]}")
+            result.to_excel(writer, sheet_name=name_of_sheet)
 
     else:  # 파일이 있으면 어펜드 모드
         with pd.ExcelWriter(file_name, mode="a", engine="openpyxl") as writer:
-            result.to_excel(writer, sheet_name=f"{result.columns.names[0]}")
+            result.to_excel(writer, sheet_name=name_of_sheet)
 
 
 def WB_Format(filename, i, j, k):
@@ -140,7 +139,7 @@ def WB_Format(filename, i, j, k):
         for row_c in range(i, row_max + 1, 1):
             for col_c in range(j, col_max + 1, 1):
                 wb[sheet].cell(row=row_c, column=col_c).font = font_style
-                wb[sheet].cell(row=row_c, column=col_c).alignment = Alignment(horizontal="right")
+                wb[sheet].cell(row=row_c, column=col_c).alignment = Alignment(horizontal="center")
                 # wb[sheet].cell(row=row_c, column=col_c).number_format = "#,##0.0"
                 wb[sheet].cell(row=row_c, column=col_c).number_format = builtin_format_code(k)
     wb.save(filename)
@@ -259,7 +258,7 @@ def Start(
     Ch_option_var,
     User_defined_band,
     User_defined_ch,
-    Chbox_var,
+    Band_Select_box_var,
     BW_list,
     Pw_option_var,
     Mipi_data,
@@ -271,230 +270,271 @@ def Start(
     text_area,
 ):
 
-    print(f"BW list = {BW_list}")
+    # try:
+    Selected_path = log_path.get()
+    text_area.delete("1.0", tk.END)
+    Run_mode = Run_mode_var.get()
+    Equip = combo1.get()
+    Sys_power = combo2.get()
+    Pa_power = combo3.get()
+    Comport = combo4.get()
 
-    try:
-        Selected_path = log_path.get()
-        text_area.delete("1.0", tk.END)
-        Run_mode = Run_mode_var.get()
-        Equip = combo1.get()
-        Sys_power = combo2.get()
-        Pa_power = combo3.get()
-        Comport = combo4.get()
+    if Equip == "TCPIP0::127.0.0.1":
+        C_Box = "CMW100"
+    elif Equip == "GPIB0::20::INSTR":
+        C_Box = "CMW500"
 
-        if Equip == "TCPIP0::127.0.0.1":
-            C_Box = "CMW100"
-        elif Equip == "GPIB0::20::INSTR":
-            C_Box = "CMW500"
+    text_area.insert(tk.END, f"Start threading\n")
+    text_area.insert(tk.END, f"Thread count = {threading.active_count()}\n")
 
-        text_area.insert(tk.END, f"Start threading\n")
-        text_area.insert(tk.END, f"Thread count = {threading.active_count()}\n")
-
-        for thread in threading.enumerate():
-            text_area.insert(
-                tk.END,
-                f"Thread ID = {threading.get_ident()}, Thread name = {thread.name}\n",
-            )
-        text_area.see(tk.END)
-
-        if Equip == "":
-            msgbox.showwarning("Warning", "Check Call Box")
-            return
-        elif Sys_power == "":
-            msgbox.showwarning("Warning", "Check System Power")
-            return
-        elif Pa_power == "":
-            msgbox.showwarning("Warning", "Check PA VCC")
-            return
-        elif Comport == "":
-            msgbox.showwarning("Warning", "Check Comport")
-            return
-
-        rm = visa.ResourceManager()
-        Callbox = rm.open_resource(Equip)
-        Callbox.timeout = 20000
-        E3632a_1 = rm.open_resource(Sys_power)  # SYS전류측정 Power supply
-        E3632a_2 = rm.open_resource(Pa_power)  # PA전류측정 Power supply
-
+    for thread in threading.enumerate():
         text_area.insert(
             tk.END,
-            f"\nCallBox = {Equip}\t|\tSystem Power = {Sys_power}\t|\tPA VCC = {Pa_power}\n",
+            f"Thread ID = {threading.get_ident()}, Thread name = {thread.name}\n",
         )
-        text_area.see(tk.END)
-        # Callbox reset 시 losstable setting 진행
-        Sig.Callbox_reset(Selected_path, Equip, Callbox, text_area)
+    text_area.see(tk.END)
 
-        Band_list = Check_bandlist(
-            Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Chbox_var, BW_list  # BWbox_var
+    # Test code
+    Test_band_ch_list = Check_testband(
+        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_box_var
+    )
+    pwr_levels = Check_pwr_lvs(Pw_option_var)
+
+    if Equip == "":
+        msgbox.showwarning("Warning", "Check Call Box")
+        return
+    elif Sys_power == "":
+        msgbox.showwarning("Warning", "Check System Power")
+        return
+    elif Pa_power == "":
+        msgbox.showwarning("Warning", "Check PA VCC")
+        return
+    elif Comport == "":
+        msgbox.showwarning("Warning", "Check Comport")
+        return
+
+    rm = visa.ResourceManager()
+    Callbox = rm.open_resource(Equip)
+    Callbox.timeout = 20000
+    E3632a_1 = rm.open_resource(Sys_power)  # SYS전류측정 Power supply
+    E3632a_2 = rm.open_resource(Pa_power)  # PA전류측정 Power supply
+
+    text_area.insert(
+        tk.END,
+        f"\nCallBox = {Equip}\t|\tSystem Power = {Sys_power}\t|\tPA VCC = {Pa_power}\n",
+    )
+    text_area.see(tk.END)
+    # Callbox reset 시 losstable setting 진행
+    Sig.Callbox_reset(Selected_path, Equip, Callbox, text_area)
+
+    Test_band_ch_list = Check_testband(
+        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_box_var
+    )
+    pwr_levels = Check_pwr_lvs(Pw_option_var)
+
+    today = datetime.today().strftime("%Y_%m_%d")
+    start_T = datetime.today().strftime("%Y%m%d_%H%M")
+    save_dir = os.getcwd() + "\\Measurement_Result\\" + today + "\\"
+    createDirectory(save_dir)
+
+    dut = Open_Dut(Comport)
+    recycle = OCP_Check(E3632a_1, E3632a_2, text_area)
+
+    if recycle:
+        bcm_check = dut.check_bcm(text_area)
+
+    if not Test_band_ch_list:
+        msgbox.showwarning("Warning", "Select Test Band")
+        return
+
+    # Singaling test
+    elif Run_mode == 1:
+        filename = save_dir + f"LTE_Current_{C_Box}_{start_T}.xlsx"
+
+        Sig.Signaling_test(
+            dut,
+            Equip,
+            Callbox,
+            E3632a_1,
+            E3632a_2,
+            Test_band_ch_list,
+            BW_list,
+            pwr_levels,
+            canvas,
+            fig,
+            ax1,
+            ax2,
+            ax3,
+            save_dir,
+            filename,
+            text_area,
         )
-        pwr_levels = Check_pwr_lvs(Pw_option_var)
 
-        today = datetime.today().strftime("%Y_%m_%d")
-        start_T = datetime.today().strftime("%Y%m%d_%H%M")
-        save_dir = os.getcwd() + "\\Measurement_Result\\" + today + "\\"
-        createDirectory(save_dir)
+    # Non-Singaling test
+    elif Run_mode == 2:
+        loss_table(Selected_path, Equip, Callbox)
 
-        dut = Open_Dut(Comport)
-        recycle = OCP_Check(E3632a_1, E3632a_2, text_area)
-
-        if recycle:
-            bcm_check = dut.check_bcm(text_area)
-
-        if not Band_list:
-            msgbox.showwarning("Warning", "Select Test Band")
-
-        # Singaling test
-        elif Run_mode == 1:
-            filename = save_dir + f"LTE_Current_{C_Box}_{start_T}.xlsx"
-
-            Sig.Signaling_test(
-                dut,
-                Equip,
-                Callbox,
-                E3632a_1,
-                E3632a_2,
-                Band_list,
-                pwr_levels,
-                canvas,
-                fig,
-                ax1,
-                ax2,
-                ax3,
-                save_dir,
-                filename,
-                text_area,
-            )
-
-        # Non-Singaling test
-        elif Run_mode == 2:
-            loss_table(Selected_path, Equip, Callbox)
-
-            if Rat_option_var.get() == 2:
-                filename = save_dir + f"LTE_NonSig_{C_Box}_{start_T}.xlsx"
-                Callbox.write("SYST:DISP:UPD ON")
-                Nonsig.Set_factolog(dut, text_area)
-
-                for band in Band_list:
-                    band_tx_result = []
-                    channel_list = Band_list[band]
-
-                    for channel in channel_list:
-                        one_channel_tx_result = Nonsig.LTE_tx_measure(
-                            dut,
-                            Equip,
-                            Callbox,
-                            E3632a_1,
-                            E3632a_2,
-                            band,
-                            channel,
-                            pwr_levels,
-                            canvas,
-                            fig,
-                            ax1,
-                            ax2,
-                            ax3,
-                            save_dir,
-                            text_area,
-                        )
-                        Nonsig.End_testmode(dut, text_area)
-                        band_tx_result.append(one_channel_tx_result)
-
-                    band_tx_result = pd.concat(band_tx_result, axis=1, keys=channel_list, names=[f"LTE Band{band}"])
-                    resut_to_excel(band_tx_result, filename)
-                    WB_Format(filename, 4, 2, 0)
-
-                images2PdfFile(save_dir, filename)
-
-            elif Rat_option_var.get() == 3:
-                filename = save_dir + f"NR_NonSig_{C_Box}_{start_T}.xlsx"
-                Callbox.write("SYST:DISP:UPD ON")
-                Nonsig.Set_factolog(dut, text_area)
-
-                for band in Band_list:
-                    band_tx_result = []
-                    channel_list = Band_list[band]
-
-                    for channel in channel_list:
-                        one_channel_tx_result = Nonsig.NR_tx_measure(
-                            dut,
-                            Equip,
-                            Callbox,
-                            E3632a_1,
-                            E3632a_2,
-                            band,
-                            channel,
-                            pwr_levels,
-                            canvas,
-                            fig,
-                            ax1,
-                            ax2,
-                            ax3,
-                            save_dir,
-                            text_area,
-                        )
-                        Nonsig.End_testmode(dut, text_area)
-                        band_tx_result.append(one_channel_tx_result)
-
-                    band_tx_result = pd.concat(band_tx_result, axis=1, keys=channel_list, names=[f"NR n{band}"])
-                    resut_to_excel(band_tx_result, filename)
-                    WB_Format(filename, 4, 2, 0)
-
-                images2PdfFile(save_dir, filename)
-        # APT Tuning
-        elif Run_mode == 3:
-            loss_table(Selected_path, Equip, Callbox)
-            filename = save_dir + f"NR_APT_Tuning_{C_Box}_{start_T}.xlsx"
+        if Rat_option_var.get() == 2:
+            filename = save_dir + f"LTE_NonSig_{C_Box}_{start_T}.xlsx"
             Callbox.write("SYST:DISP:UPD ON")
-
             Nonsig.Set_factolog(dut, text_area)
 
-            for band in Band_list:
+            for Testband in Test_band_ch_list:
+                channel_list = Test_band_ch_list[Testband]
+                bandwidth_list = BW_list[Testband]
                 band_tx_result = []
-                channel_list = Band_list[band]
+                ch_tx_result = []
                 for channel in channel_list:
+                    bandwidth_tx_result = []
+                    for bandwidth in bandwidth_list:
+                        tx_result = Nonsig.LTE_tx_measure(
+                            dut,
+                            Equip,
+                            Callbox,
+                            E3632a_1,
+                            E3632a_2,
+                            Testband,
+                            channel,
+                            bandwidth,
+                            pwr_levels,
+                            canvas,
+                            fig,
+                            ax1,
+                            ax2,
+                            ax3,
+                            save_dir,
+                            text_area,
+                        )
+                        Nonsig.End_testmode(dut, text_area)
+                        bandwidth_tx_result.append(tx_result)
 
-                    one_channel_tx_result = Apt.NR_tx_measure(
-                        dut,
-                        Equip,
-                        Callbox,
-                        E3632a_1,
-                        E3632a_2,
-                        band,
-                        channel,
-                        pwr_levels,
-                        Mipi_data,
-                        canvas,
-                        fig,
-                        ax1,
-                        ax2,
-                        ax3,
-                        save_dir,
-                        text_area,
+                    ch_tx_result = pd.concat(
+                        bandwidth_tx_result,
+                        axis=0,
+                        keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                        names=[f"LTE B{Testband} {channel}CH"],
                     )
-                    Nonsig.End_testmode(dut, text_area)
+                    band_tx_result.append(ch_tx_result)
 
-                    band_tx_result.append(one_channel_tx_result)
+                Total_tx_result = pd.concat(
+                    band_tx_result, axis=1, keys=[str(ch) + " CH" for ch in channel_list], names=[f"LTE B{Testband}"]
+                )
 
-                band_tx_result = pd.concat(band_tx_result, axis=1, keys=channel_list, names=[f"LTE Band{band}"])
-                resut_to_excel(band_tx_result, filename)
-                WB_Format(filename, 4, 2, 0)
+                resut_to_excel(Total_tx_result, filename, f"LTE B{Testband}")
+                WB_Format(filename, 1, 1, 0)
 
             images2PdfFile(save_dir, filename)
 
-        text_area.see(tk.END)
-        text_area.insert(tk.END, f"\n\n")
-        response = dut.at_write("AT+MODECHAN=0,2")
-        text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
-        response = dut.at_write("AT+DISPTEST=0,3")
-        text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
-        text_area.see(tk.END)
+        elif Rat_option_var.get() == 3:
+            filename = save_dir + f"NR_NonSig_{C_Box}_{start_T}.xlsx"
+            Callbox.write("SYST:DISP:UPD ON")
+            Nonsig.Set_factolog(dut, text_area)
 
-        Psupply_off(E3632a_1, E3632a_2)
-        msgbox.showinfo("Message", "***** 작업완료 *****")
-        rm.close()
+            for Testband in Test_band_ch_list:
+                channel_list = Test_band_ch_list[Testband]
+                bandwidth_list = BW_list[Testband]
+                band_tx_result = []
+                ch_tx_result = []
+                for channel in channel_list:
+                    bandwidth_tx_result = []
+                    for bandwidth in bandwidth_list:
+                        tx_result = Nonsig.NR_tx_measure(
+                            dut,
+                            Equip,
+                            Callbox,
+                            E3632a_1,
+                            E3632a_2,
+                            Testband,
+                            channel,
+                            bandwidth,
+                            pwr_levels,
+                            canvas,
+                            fig,
+                            ax1,
+                            ax2,
+                            ax3,
+                            save_dir,
+                            text_area,
+                        )
+                        Nonsig.End_testmode(dut, text_area)
+                        bandwidth_tx_result.append(tx_result)
 
-    except Exception as e:
-        msgbox.showwarning("Warning", e)
+                    ch_tx_result = pd.concat(
+                        bandwidth_tx_result,
+                        axis=0,
+                        keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                        names=[f"NR n{Testband} {channel}CH"],
+                    )
+                    band_tx_result.append(ch_tx_result)
+
+                Total_tx_result = pd.concat(
+                    band_tx_result, axis=1, keys=[str(ch) + " CH" for ch in channel_list], names=[f"NR n{Testband}"]
+                )
+                resut_to_excel(Total_tx_result, filename, f"NR n{Testband}")
+                WB_Format(filename, 1, 1, 0)
+
+            images2PdfFile(save_dir, filename)
+
+    # APT Tuning
+    elif Run_mode == 3:
+        loss_table(Selected_path, Equip, Callbox)
+        filename = save_dir + f"NR_APT_Tuning_{C_Box}_{start_T}.xlsx"
+        Callbox.write("SYST:DISP:UPD ON")
+
+        Nonsig.Set_factolog(dut, text_area)
+
+        for Testband in Test_band_ch_list:
+            band_tx_result = []
+            channel_list = Test_band_ch_list[Testband]
+
+            for channel in channel_list:
+                one_channel_tx_result = Apt.NR_tx_measure(
+                    dut,
+                    Equip,
+                    Callbox,
+                    E3632a_1,
+                    E3632a_2,
+                    Testband,
+                    channel,
+                    BW_list,
+                    pwr_levels,
+                    Mipi_data,
+                    canvas,
+                    fig,
+                    ax1,
+                    ax2,
+                    ax3,
+                    save_dir,
+                    text_area,
+                )
+                Nonsig.End_testmode(dut, text_area)
+
+                band_tx_result.append(one_channel_tx_result)
+
+            band_tx_result = pd.concat(band_tx_result, axis=1, keys=channel_list, names=[f"LTE Band{Testband}"])
+            resut_to_excel(band_tx_result, filename, f"LTE Band{Testband}")
+            WB_Format(filename, 4, 2, 0)
+
+        images2PdfFile(save_dir, filename)
+
+    else:
+        return
+
+    text_area.see(tk.END)
+    text_area.insert(tk.END, f"\n\n")
+    response = dut.at_write("AT+MODECHAN=0,2")
+    text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
+    response = dut.at_write("AT+DISPTEST=0,3")
+    text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
+    text_area.see(tk.END)
+
+    Psupply_off(E3632a_1, E3632a_2)
+    msgbox.showinfo("Message", "***** 작업완료 *****")
+    # rm.close()
+
+
+# except Exception as e:
+#     msgbox.showwarning("Warning", e)
 
 
 def loss_table(Selected_path, Equip, Callbox):
@@ -815,9 +855,167 @@ def Query_aclr(rat, Callbox):
     return TX_power, Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2
 
 
-def Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, text_area):
-    Equipment = Callbox.query("*IDN?").split(",")[1]
+def define_BW_number(rat, bandwidth):
+    if rat == "LTE":
+        match bandwidth:
+            case 5:
+                number = 2
+            case 10:
+                number = 3
+            case 15:
+                number = 4
+            case 20:
+                number = 5
 
+    elif rat == "NR":
+        match bandwidth:
+            case 5:
+                number = 0
+            case 10:
+                number = 1
+            case 15:
+                number = 2
+            case 20:
+                number = 3
+            case 25:
+                number = 4
+            case 30:
+                number = 5
+            case 40:
+                number = 6
+            case 50:
+                number = 7
+            case 60:
+                number = 8
+            case 80:
+                number = 9
+            case 90:
+                number = 10
+            case 100:
+                number = 11
+            case 70:
+                number = 12
+
+    return number
+
+
+def Set_limit_mask(Callbox, rat, bandwidth):
+    if rat == "LTE":
+        match bandwidth:
+            case 5:
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM1:CBAN50 ON,0MHz,1MHz,-15,K030")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM2:CBAN50 ON,1MHz,2.5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM3:CBAN50 ON,2.5MHz,2.8MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM4:CBAN50 ON,2.8MHz,5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM5:CBAN50 ON,5MHz,6MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM6:CBAN50 ON,6MHz,10MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM7:CBAN50 OFF,10MHz,10MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM8:CBAN50 OFF,10MHz,10MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM9:CBAN50 OFF,10MHz,10MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM9:CBAN50 OFF,10MHz,10MHz,-25,M1")
+            case 10:
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM1:CBAN100 ON,0MHz,1MHz,-18,K030")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM2:CBAN100 ON,1MHz,2.5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM3:CBAN100 ON,2.5MHz,2.8MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM4:CBAN100 ON,2.8MHz,5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM5:CBAN100 ON,5MHz,6MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM6:CBAN100 ON,6MHz,10MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM7:CBAN100 ON,10MHz,15MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM8:CBAN100 OFF,15MHz,15MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM9:CBAN100 OFF,15MHz,15MHz,-25,M1")
+            case 15:
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM1:CBAN150 ON,0MHz,1MHz,-20,K030")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM2:CBAN150 ON,1MHz,2.5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM3:CBAN150 ON,2.5MHz,2.8MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM4:CBAN150 ON,2.8MHz,5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM5:CBAN150 ON,5MHz,6MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM6:CBAN150 ON,6MHz,10MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM7:CBAN150 ON,10MHz,15MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM8:CBAN150 ON,15MHz,20MHz,-25,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM9:CBAN150 OFF,20MHz,20MHz,-25,M1")
+            case 20:
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM1:CBAN200 ON,0,1MHz,-21,K030")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM2:CBAN200 ON,1MHz,2.5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM3:CBAN200 ON,2.5MHz,2.8MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM4:CBAN200 ON,2.8MHz,5MHz,-10,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM5:CBAN200 ON,5MHz,6MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM6:CBAN200 ON,6MHz,10MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM7:CBAN200 ON,10MHz,15MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM8:CBAN200 ON,15MHz,20MHz,-13,M1")
+                Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM9:CBAN200 ON,20MHz,25MHz,-25,M1")
+    elif rat == "NR":
+        match bandwidth:
+            case 5:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN5 ON,0.015MHz,0.0985MHz,-13.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN5 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN5 ON,5.5MHz,4.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN5 ON,5.5MHz,9.5MHz,-23.5,M1")
+            case 10:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN10 ON,0.015MHz,0.0985MHz,-16.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN10 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN10 ON,5.5MHz,9.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN10 ON,10.5MHz,14.5MHz,-23.5,M1")
+            case 15:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN15 ON,0.015MHz,0.0985MHz,-18.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN15 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN15 ON,5.5MHz,14.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN15 ON,15.5MHz,19.5MHz,-23.5,M1")
+            case 20:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN20 ON,0.015MHz,0.0985MHz,-19.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN20 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN20 ON,5.5MHz,19.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN20 ON,20.5MHz,24.5MHz,-23.5,M1")
+            case 25:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN25 ON,0.015MHz,0.0985MHz,-20.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN25 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN25 ON,5.5MHz,24.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN25 ON,25.5MHz,29.5MHz,-23.5,M1")
+            case 30:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN30 ON,0.015MHz,0.0985MHz,-21.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN30 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN30 ON,5.5MHz,29.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN30 ON,30.5MHz,34.5MHz,-23.5,M1")
+            case 40:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN40 ON,0.015MHz,0.0985MHz,-22.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN40 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN40 ON,5.5MHz,39.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN40 ON,40.5MHz,44.5MHz,-23.5,M1")
+            case 50:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN50 ON,0.015MHz,0.0985MHz,-22.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN50 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN50 ON,5.5MHz,49.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN50 ON,50.5MHz,54.5MHz,-23.5,M1")
+            case 60:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN60 ON,0.015MHz,0.0985MHz,-22.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN60 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN60 ON,5.5MHz,59.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN60 ON,60.5MHz,64.5MHz,-23.5,M1")
+            case 70:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN70 ON,0.015MHz,0.0985MHz,26.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN70 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN70 ON,5.5MHz,69.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN70 ON,70.5MHz,74.5MHz,-23.5,M1")
+            case 80:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN80 ON,0.015MHz,0.0985MHz,-22.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN80 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN80 ON,5.5MHz,79.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN80 ON,80.5MHz,84.5MHz,-23.5,M1")
+            case 90:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN90 ON,0.015MHz,0.0985MHz,-22.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN90 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN90 ON,5.5MHz,89.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN90 ON,90.5MHz,94.5MHz,-23.5,M1")
+            case 100:
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN100 ON,0.015MHz,0.0985MHz,-22.5,K030")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN100 ON,1.5MHz,4.5MHz,-8.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN100 ON,5.5MHz,99.5MHz,-11.5,M1")
+                Callbox.write(f"CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN100 ON,100.5MHz,104.5MHz,-23.5,M1")
+
+
+def Nonsig_lte_tx_measure_setting(
+    dut, Callbox, Equip, band, bandwidth, BW_number, NRB, PRB, rxfreq, txfreq, text_area
+):
+    Equipment = Callbox.query("*IDN?").split(",")[1]
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
         Callbox.write(f"ROUT:GPRF:GEN:SCEN:SAL R118, TX1")
         Callbox.write(f"CONFigure:GPRF:GEN:CMWS:USAGe:TX:ALL R118, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF")
@@ -836,21 +1034,27 @@ def Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, tex
 
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
         if band in [38, 39, 40, 41]:
-            Callbox.write(
-                f"SOUR:GPRF:GEN1:ARB:FILE"
-                f" 'C:\CMW100_WV\SMU_NodeB_Ant0_LTE_SENS_10MHz_TDD_CFG1_SF_CFG4_SIMO_woCIF_AGL8_RC.wv'"
-            )
-            Check_OPC(Callbox)
+            if bandwidth == 10:
+                Callbox.write(
+                    f"SOUR:GPRF:GEN1:ARB:FILE"
+                    f" 'C:\CMW100_WV\SMU_NodeB_Ant0_LTE_SENS_{bandwidth:02d}MHz_TDD_CFG1_SF_CFG4_SIMO_woCIF_AGL8_RC.wv'"
+                )
+                Check_OPC(Callbox)
+            else:
+                Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'C:\CMW100_WV\SMU_NodeB_Ant0_TDD_FULL_{BW_number+1:02d}.wv'")
+                Check_OPC(Callbox)
         else:
-            Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'C:\CMW100_WV\SMU_NodeB_Ant0_FRC_10MHz.wv'")
+            Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'C:\CMW100_WV\SMU_NodeB_Ant0_FRC_{bandwidth:02d}MHz.wv'")
             Check_OPC(Callbox)
 
     elif (Equipment == "CMW") & (Equip == "GPIB0::20::INSTR"):
         if band in [38, 39, 40, 41]:
-            Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_Channel_CC0_RxAnt0_RF_Verification_10M_SIMO_01.wv'")
+            Callbox.write(
+                f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_Channel_CC0_RxAnt0_RF_Verification_{bandwidth}M_SIMO_01.wv'"
+            )
             Check_OPC(Callbox)
         else:
-            Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_NodeB_Ant0_FRC_10MHz.wv'")
+            Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_NodeB_Ant0_FRC_{bandwidth:02d}MHz.wv'")
             Check_OPC(Callbox)
 
     word = "SOUR:GPRF:GEN1:ARB:FILE?"
@@ -875,7 +1079,8 @@ def Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, tex
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
 
-    response = dut.at_write(f"AT+LTXSENDREQ=0,3,{txfreq},12,0,0,2,1,23")
+    response = dut.at_write(f"AT+LTXSENDREQ=0,{BW_number},{txfreq},{PRB},0,0,2,1,23")
+
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
 
@@ -891,24 +1096,17 @@ def Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, tex
     Callbox.write(f"CONF:LTE:MEAS:BAND OB{band}")
     Callbox.write(f"CONF:LTE:MEAS:RFS:FREQ {txfreq}KHz")
     Check_OPC(Callbox)
-    Callbox.write("CONF:LTE:MEAS:MEV:CBAN B100")
+    Callbox.write(f"CONF:LTE:MEAS:MEV:CBAN B{bandwidth*10:03d}")
     Callbox.write("CONF:LTE:MEAS:MEV:MOD:MSCH QPSK")
-    Callbox.write("CONF:LTE:MEAS:MEV:RBAL:NRB 12")
+    Callbox.write(f"CONF:LTE:MEAS:MEV:RBAL:NRB {PRB}")
     Callbox.write("CONF:LTE:MEAS:MEV:RBAL:ORB 0")
     Callbox.write("CONF:LTE:MEAS:MEV:CPR NORM")
     Callbox.write("CONF:LTE:MEAS:MEV:PLC 0")
     Callbox.write("CONF:LTE:MEAS:MEV:DSSP 0")
     Callbox.write("CONF:LTE:MEAS:MEV:RBAL:AUTO OFF")
     Callbox.write("CONF:LTE:MEAS:MEV:MOEX ON")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM1:CBAN100 ON,0MHz,1MHz,-18,K030")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM2:CBAN100 ON,1MHz,2.5MHz,-10,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM3:CBAN100 ON,2.5MHz,2.8MHz,-10,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM4:CBAN100 ON,2.8MHz,5MHz,-10,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM5:CBAN100 ON,5MHz,6MHz,-13,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM6:CBAN100 ON,6MHz,10MHz,-13,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM7:CBAN100 ON,10MHz,15MHz,-25,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM8:CBAN100 OFF,15MHz,15MHz,-25,M1")
-    Callbox.write("CONF:LTE:MEAS:MEV:LIM:SEM:LIM9:CBAN100 OFF,15MHz,15MHz,-25,M1")
+
+    Set_limit_mask(Callbox, "LTE", bandwidth)
 
     Callbox.write("CONFigure:LTE:MEAS:MEValuation:MSLot ALL")
     Callbox.write("CONF:LTE:MEAS:RFS:UMAR 10.000000")
@@ -919,7 +1117,7 @@ def Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, tex
     elif (Equipment == "CMW") & (Equip == "GPIB0::20::INSTR"):
         Callbox.write("ROUT:LTE:MEAS:SCEN:SAL RFAC, RX1")
 
-    Callbox.write("CONF:LTE:MEAS:RFS:UMAR 10.000000")
+    Callbox.write("CONF:LTE:MEAS:RFS:UMAR 10.000000")  # User Margin
     Callbox.write("CONF:LTE:MEAS:MEV:RBAL:AUTO ON")
     Callbox.write("CONF:LTE:MEAS:MEV:SCO:MOD 5")
 
@@ -954,7 +1152,9 @@ def Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, tex
         Callbox.write("TRIG:GPRF:MEAS:POW:MODE ONCE")
 
 
-def Nonsig_nr_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, text_area):
+def Nonsig_nr_tx_measure_setting(
+    dut, Callbox, Equip, band, bandwidth, BW_number, NRB, outfull_offset, PRB, infull_offset, rxfreq, txfreq, text_area
+):
     Equipment = Callbox.query("*IDN?").split(",")[1]
 
     Callbox.write(f"ROUT:GPRF:GEN:SCEN:SAL R118, TX1")
@@ -1000,31 +1200,31 @@ def Nonsig_nr_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, text
     Ask_query(Callbox, text_area, word, word)
 
     # AT+NRFSYNC = Main, RX Path, SCS, BW, 256QAM, Frequency
-    # Main : 0, Main : 0, SCS 15 : 0,  5M : 0, QPSK : 0,
-    # CA#1 : 1,  4RX : 1, SCS 30 : 1, 10M : 1, 256Q : 3,
+    # Main : 0, Main : 0, SCS 15 : 0,  5M : 0, QPSK : 0, Frequency
+    # CA#1 : 1,  4RX : 1, SCS 30 : 1, 10M : 1, 256Q : 3, Frequency
     # CA#2 : 2,  6RX : 2,
     # CA#3 : 3
 
     # AT+NTXSENDREQ=TX Path, Frequency, BW, SCS, RBSize, RBOffset, MCS, Waveform type, TX Level
     # Main : 0, Frequency,  5M : 0, SCS 15 : 0, RBSize, RBOffset, QPSK : 2, DFT-S : 0, TX Level
     #  Sub : 1, Frequency, 10M : 1, SCS 30 : 1, RBSize, RBOffset, 256Q : 8,    CP : 1, TX Level
-
+    # MIMO : 20
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
         if band in [38, 40, 41, 77, 78]:  # SCS 30
-            response = dut.at_write(f"AT+NRFSYNC=0,0,1,1,0,{rxfreq}")
+            response = dut.at_write(f"AT+NRFSYNC=0,0,1,{BW_number},0,{rxfreq}")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
-            response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,1,12,6,2,0,23")
+            response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},{BW_number},1,{PRB},{infull_offset},2,0,23")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
             Callbox.write("CONF:NRS:MEAS:MEV:DMODe TDD")
             Check_OPC(Callbox)
             scs = 30
         else:  # SCS 15
-            response = dut.at_write(f"AT+NRFSYNC=0,0,0,1,0,{rxfreq}")
+            response = dut.at_write(f"AT+NRFSYNC=0,0,0,{BW_number},0,{rxfreq}")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
-            response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,0,25,12,2,0,23")
+            response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},{BW_number},0,{PRB},{infull_offset},2,0,23")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
             Callbox.write("CONF:NRS:MEAS:MEV:DMODe FDD")
@@ -1036,18 +1236,21 @@ def Nonsig_nr_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, text
     Check_OPC(Callbox)
     Callbox.write("CONF:NRS:MEAS:MEV:PLC 0")
     Callbox.write("CONF:NRS:MEAS:MEV:MOEX ON")
-    Callbox.write(f"CONF:NRS:MEAS:MEV:BWC S{scs}K, B010")
-    Callbox.write("CONF:NRS:MEAS:MEV:LIM:SEM:AREA1:CBAN10   ON, 0.015MHz, 0.0985MHz, -16.5,K030")
-    Callbox.write("CONF:NRS:MEAS:MEV:LIM:SEM:AREA2:CBAN10   ON,   1.5MHz,    4.5MHz,  -8.5,  M1")
-    Callbox.write("CONF:NRS:MEAS:MEV:LIM:SEM:AREA3:CBAN10   ON,   5.5MHz,   9.5MHz, -11.5,  M1")
-    Callbox.write("CONF:NRS:MEAS:MEV:LIM:SEM:AREA4:CBAN10   ON, 10.5MHz,  14.5MHz, -23.5,  M1")
+    Callbox.write(f"CONF:NRS:MEAS:MEV:BWC S{scs}K, B{bandwidth:03d}")
+
+    Set_limit_mask(Callbox, "NR", bandwidth)
+
     Callbox.write("CONFigure:NRSub:MEASurement:MEValuation:DFTPrecoding ON")
 
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
         if band in [38, 40, 41, 77, 78]:  # SCS 30
-            Callbox.write("CONFigure:NRSub:MEASurement:MEValuation:PUSChconfig QPSK,A,OFF,12,6,14,0,T1,SING,0,2")
+            Callbox.write(
+                f"CONFigure:NRSub:MEASurement:MEValuation:PUSChconfig QPSK,A,OFF,{PRB},{infull_offset},14,0,T1,SING,0,2"
+            )
         else:
-            Callbox.write("CONFigure:NRSub:MEASurement:MEValuation:PUSChconfig QPSK,A,OFF,25,12,14,0,T1,SING,0,2")
+            Callbox.write(
+                f"CONFigure:NRSub:MEASurement:MEValuation:PUSChconfig QPSK,A,OFF,{PRB},{infull_offset},14,0,T1,SING,0,2"
+            )
 
     Callbox.write("CONFigure:NRSub:MEASurement:MEValuation:PCOMp OFF, 6000E+6")
     Check_OPC(Callbox)

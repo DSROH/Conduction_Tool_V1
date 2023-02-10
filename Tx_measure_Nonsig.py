@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 import tkinter as tk
 import pandas as pd
-from Band_list import channel_converter, NR_channel_converter
+from Band_list import channel_converter, NR_channel_converter, Num_RB
 import Function as func
 
 pd.options.display.float_format = "{:.5f}".format
@@ -53,6 +53,7 @@ def LTE_tx_measure(
     E3632a_2,
     band,
     channel,
+    bandwidth,
     pwr_levels,
     canvas,
     fig,
@@ -71,9 +72,9 @@ def LTE_tx_measure(
     list_ACLR_R = []
 
     text_area.insert(tk.END, "\n")
-    text_area.insert(tk.END, "*" * 50)
-    text_area.insert(tk.END, f" BAND{band:<2} {channel:>5} CH ")
-    text_area.insert(tk.END, "*" * 49)
+    text_area.insert(tk.END, "*" * 47)
+    text_area.insert(tk.END, f" BAND{band:<2} {channel:>5} CH {bandwidth}MHz ")
+    text_area.insert(tk.END, "*" * 46)
     text_area.insert(tk.END, "\n")
     response = dut.at_write("AT+HNSSTOP")
     response = dut.at_write(f"AT+LRFFINALSTART=1,{band}")
@@ -83,7 +84,11 @@ def LTE_tx_measure(
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
 
-    func.Nonsig_lte_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, text_area)
+    NRB, outfull_offset, PRB, infull_offsets = Num_RB("LTE", band, bandwidth)
+    BW_number = func.define_BW_number("LTE", bandwidth)
+    func.Nonsig_lte_tx_measure_setting(
+        dut, Callbox, Equip, band, bandwidth, BW_number, NRB, PRB, rxfreq, txfreq, text_area
+    )
 
     text_area.insert(tk.END, "-" * 116)
     text_area.insert(tk.END, "\n")
@@ -115,15 +120,15 @@ def LTE_tx_measure(
     for pwr in pwr_levels:
         if pwr == 23:  # 23dBm 12RB Setting
             Callbox.write("CONFigure:LTE:MEAS:MEValuation:RBALlocation:AUTO OFF")
-            response = dut.at_write(f"AT+LTXSENDREQ=0,3,{txfreq},12,0,0,2,1,{pwr}")
+            response = dut.at_write(f"AT+LTXSENDREQ=0,{BW_number},{txfreq},{PRB},0,0,2,1,{pwr}")
             # response = dut.at_write(f"AT+LTXPWRLVLSET={pwr}")
             # response = dut.at_write("AT+LTXCHNSDREQ")
         else:
-            response = dut.at_write(f"AT+LTXSENDREQ=0,3,{txfreq},50,0,0,2,1,{pwr}")
+            response = dut.at_write(f"AT+LTXSENDREQ=0,{BW_number},{txfreq},{NRB},0,0,2,1,{pwr}")
             # response = dut.at_write(f"AT+LTXPWRLVLSET={pwr}")
             # response = dut.at_write("AT+LTXCHNSDREQ")
             Callbox.write("CONFigure:LTE:MEAS:MEValuation:RBALlocation:AUTO OFF")
-            Callbox.write("CONF:LTE:MEAS:MEV:RBAL:NRB 50")
+            Callbox.write(f"CONF:LTE:MEAS:MEV:RBAL:NRB {NRB}")
             Callbox.write("CONF:LTE:MEAS:MEV:RBAL:ORB 0")
 
         Callbox.write(f"CONF:LTE:MEAS:RFS:UMAR 10.000000")
@@ -146,7 +151,7 @@ def LTE_tx_measure(
             tk.END,
             f"    {pwr:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
             f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-            f" {Pa_current:>5d}  |   {Sy_current:>5d}  \n",
+            f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
         )
         text_area.see(tk.END)
         # word = "FETC:LTE:MEAS:MEV:SEM:MARG?" # SEM 마진 생략
@@ -166,7 +171,18 @@ def LTE_tx_measure(
             list_Pa_current.append(Pa_current)
 
         func.update_plot(
-            canvas, fig, ax1, ax2, ax3, "LTE", band, channel, list_Power, Power_delta, list_Pa_current, list_ACLR_max
+            canvas,
+            fig,
+            ax1,
+            ax2,
+            ax3,
+            "LTE",
+            band,
+            channel,
+            list_Power,
+            Power_delta,
+            list_Pa_current,
+            list_ACLR_max,
         )
         Callbox.write("STOP:LTE:MEAS:MEV")
         func.Check_OPC(Callbox)
@@ -183,7 +199,7 @@ def LTE_tx_measure(
             Sy_current,
         ]
     str_time = datetime.now().strftime("%y%m%d_%H%M%S_")
-    fig.savefig(save_dir + str_time + f"NonSig_LTE_B{band}_{channel}CH" + ".png", dpi=300)
+    fig.savefig(save_dir + str_time + f"NonSig_LTE_B{band}_{channel}CH_BW{bandwidth}M" + ".png", dpi=300)
 
     return one_channel_tx_result
 
@@ -196,6 +212,7 @@ def NR_tx_measure(
     E3632a_2,
     band,
     channel,
+    bandwidth,
     pwr_levels,
     canvas,
     fig,
@@ -215,15 +232,31 @@ def NR_tx_measure(
     list_ACLR_R = []
 
     text_area.insert(tk.END, "\n")
-    text_area.insert(tk.END, "*" * 50)
-    text_area.insert(tk.END, f" n{band:<2} {channel:>5} CH ")
-    text_area.insert(tk.END, "*" * 49)
+    text_area.insert(tk.END, "*" * 47)
+    text_area.insert(tk.END, f" n{band:<2} {channel:>5} CH {bandwidth}MHz ")
+    text_area.insert(tk.END, "*" * 46)
     text_area.insert(tk.END, "\n")
     response = dut.at_write(f"AT+NRFFINALSTART={band},0")
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
 
-    func.Nonsig_nr_tx_measure_setting(dut, Callbox, Equip, band, rxfreq, txfreq, text_area)
+    NRB, outfull_offset, PRB, infull_offset = Num_RB("NR", band, bandwidth)
+    BW_number = func.define_BW_number("NR", bandwidth)
+    func.Nonsig_nr_tx_measure_setting(
+        dut,
+        Callbox,
+        Equip,
+        band,
+        bandwidth,
+        BW_number,
+        NRB,
+        outfull_offset,
+        PRB,
+        infull_offset,
+        rxfreq,
+        txfreq,
+        text_area,
+    )
 
     text_area.insert(tk.END, "-" * 116)
     text_area.insert(tk.END, "\n")
@@ -255,21 +288,21 @@ def NR_tx_measure(
     for pwr in pwr_levels:
         if pwr == 23:  # 23dBm 12RB Setting
             if band in [38, 40, 41, 77, 78]:  # SCS 30
-                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,1,12,6,2,0,23")
+                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,1,{PRB},{infull_offset},2,0,23")
             else:  # SCS 15
-                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,0,25,12,2,0,23")
+                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,0,{PRB},{infull_offset},2,0,23")
 
             Callbox.write(f"CONF:NRS:MEAS:RFS:UMAR 10.000000")
             Callbox.write(f"CONF:NRS:MEAS:RFS:ENP {pwr+5:5.2f}")
             func.Check_OPC(Callbox)
         else:
             if band in [38, 40, 41, 77, 78]:  # SCS 30
-                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,1,24,0,2,0,{pwr}")
+                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,1,{NRB},{outfull_offset},2,0,{pwr}")
             else:  # SCS 15
-                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,0,50,0,2,0,{pwr}")
+                response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},1,0,{NRB},{outfull_offset},2,0,{pwr}")
 
-            Callbox.write("CONF:NRS:MEAS:MEV:RBAL:NRB 50")
-            Callbox.write("CONF:NRS:MEAS:MEV:RBAL:ORB 0")
+            Callbox.write(f"CONF:NRS:MEAS:MEV:RBAL:NRB {NRB}")
+            Callbox.write(f"CONF:NRS:MEAS:MEV:RBAL:ORB {outfull_offset}")
             Callbox.write(f"CONF:NRS:MEAS:RFS:UMAR 10.000000")
             Callbox.write(f"CONF:NRS:MEAS:RFS:ENP {pwr+5:5.2f}")
             func.Check_OPC(Callbox)
@@ -282,7 +315,7 @@ def NR_tx_measure(
             tk.END,
             f"    {pwr:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
             f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-            f" {Pa_current:>5d}  |   {Sy_current:>5d}  \n",
+            f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
         )
         text_area.see(tk.END)
 

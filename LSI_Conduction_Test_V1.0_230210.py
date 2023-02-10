@@ -3,6 +3,7 @@ import tkinter as tk
 import ttkbootstrap as ttkbst
 from ttkbootstrap.constants import *
 import tkinter.scrolledtext as st
+import tkinter.messagebox as msgbox
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
@@ -91,13 +92,13 @@ Author.place(x=690, y=10)
 Setting_frame = ttkbst.Frame(Left_frame)
 Setting_frame.place(x=5, y=100, width=755, height=170)
 
-Band_frame = ttkbst.Labelframe(Setting_frame, text="Band")
+Band_frame = ttkbst.Labelframe(Setting_frame, text="TX Main")
 Band_frame.place(x=0, y=50, width=400, height=120)
 
 
 def on_select(v):
 
-    global Chbox_var
+    global Band_Select_box_var
     global Band_index
     Band_index = []
 
@@ -115,16 +116,16 @@ def on_select(v):
         rat = "n"
 
     try:
-        if Chbox_var:
-            for count, i in enumerate(Chbox_var):
-                Chbox_var[count].place_forget()
+        if Band_Select_box_var:
+            for count, i in enumerate(Band_Select_box_var):
+                Band_Select_box_var[count].place_forget()
     except:
-        Chbox_var = [None] * len(B_list)
+        Band_Select_box_var = [None] * len(B_list)
         Chkbox = [None] * len(B_list)
 
     for count, i in enumerate(B_list):
-        Chbox_var[count] = ttkbst.BooleanVar()
-        Chkbox[count] = ttkbst.Checkbutton(Band_frame, text=f"{rat}{i}", width=5, variable=Chbox_var[count])
+        Band_Select_box_var[count] = ttkbst.BooleanVar()
+        Chkbox[count] = ttkbst.Checkbutton(Band_frame, text=f"{rat}{i}", width=5, variable=Band_Select_box_var[count])
         Band_index.append(f"{rat}{i}")
         if count == 0:
             pos_x = 10
@@ -133,7 +134,7 @@ def on_select(v):
             pos_x = 10 + 55 * (count % 7)
             pos_y = 5 + 35 * (count // 7)
         Chkbox[count].place(x=pos_x, y=pos_y, width=50)
-        Chbox_var[count].set(True)
+        Band_Select_box_var[count].set(True)
 
 
 # %%
@@ -232,16 +233,6 @@ Btn_user_defined_ch.place(x=260, y=15, width=60, height=30)
 Win_GUI.bind("<F9>", lambda event: [func_userch()])
 
 # %%
-BW_list = {}
-
-Btn_bwsetting = ttkbst.Button(
-    Setting_frame, text="BW(F10)", style="danger.TButton", command=lambda: blist.BW_setting(Rat_option_var.get())
-)
-Btn_bwsetting.place(x=325, y=15, width=70, height=30)
-
-Win_GUI.bind("<F10>", lambda: BW_list.update([blist.BW_setting(Rat_option_var.get())]))
-
-# %%
 Pw_option_var = ttkbst.IntVar()
 Btn_pwsetting = ttkbst.Button(Setting_frame, text="PW(F11)", style="danger.TButton", command=func_userch)
 Btn_pwsetting.place(x=400, y=15, width=65, height=30)
@@ -253,16 +244,16 @@ Win_GUI.bind("<F11>", lambda event: [func_userch()])
 SelectBtn_frame = ttkbst.Labelframe(Setting_frame, text="Select")
 SelectBtn_frame.place(x=405, y=50, width=60, height=120)
 
-Btn_Selectall = ttkbst.Button(SelectBtn_frame, text="All", command=lambda: [blist.Selectall_band(Chbox_var)])
+Btn_Selectall = ttkbst.Button(SelectBtn_frame, text="All", command=lambda: [blist.Selectall_band(Band_Select_box_var)])
 Btn_Selectall.place(x=4, y=0, width=50, height=29)
 
 Btn_Selectfdd = ttkbst.Button(
-    SelectBtn_frame, text="FDD", command=lambda: [blist.Selectfdd_band(Rat_option_var, Chbox_var)]
+    SelectBtn_frame, text="FDD", command=lambda: [blist.Selectfdd_band(Rat_option_var, Band_Select_box_var)]
 )
 Btn_Selectfdd.place(x=4, y=34, width=50, height=29)
 
 Btn_Selecttdd = ttkbst.Button(
-    SelectBtn_frame, text="TDD", command=lambda: [blist.Selecttdd_band(Rat_option_var, Chbox_var)]
+    SelectBtn_frame, text="TDD", command=lambda: [blist.Selecttdd_band(Rat_option_var, Band_Select_box_var)]
 )
 Btn_Selecttdd.place(x=4, y=68, width=50, height=29)
 
@@ -377,6 +368,8 @@ def Callback_CB(combo1, Rat_option_var):
                 Rat_Option3.config(state=tk.NORMAL),  # NR enable
             ],
         )
+    else:
+        msgbox.showwarning("Warning", "Select Call_Box")
 
 
 # %%
@@ -537,28 +530,31 @@ Win_GUI.bind(
 )
 
 # %%
-# combo1.current(0)
-# combo2.current(0)
-# combo3.current(1)
-# combo4.current(0)
+combo1.current(0)
+combo2.current(0)
+combo3.current(1)
+combo4.current(0)
 
 Rat_Option2.invoke()
 Ch_option_var.set(1)  # 1로 세팅만 한다.
 Pw_option_var.set(1)
-Run_mode_var.set(1)
+Run_mode_var.set(2)
 
 # %%
-BW_list = blist.Init_BW_Setting(Rat_option_var.get())
+BW_list = blist.Init_BW_Setting(Rat_option_var.get(), Band_index, Band_Select_box_var)
 
 Btn_bwsetting = ttkbst.Button(
     Setting_frame,
     text="BW(F10)",
     style="danger.TButton",
-    command=lambda: [BW_list.update(blist.BW_setting(Rat_option_var.get(), BW_list))],
+    command=lambda: [BW_list.update(blist.BW_setting(Rat_option_var.get(), Band_index, Band_Select_box_var, BW_list))],
 )
 Btn_bwsetting.place(x=325, y=15, width=70, height=30)
 
-Win_GUI.bind("<F10>", lambda: [BW_list.update(blist.BW_setting(Rat_option_var.get(), BW_list))])
+Win_GUI.bind(
+    "<F10>",
+    lambda event: [BW_list.update(blist.BW_setting(Rat_option_var.get(), Band_index, Band_Select_box_var, BW_list))],
+)
 
 # %%
 Btn_strt = ttkbst.Button(
@@ -578,7 +574,7 @@ Btn_strt = ttkbst.Button(
                 Ch_option_var,
                 User_defined_band,
                 User_defined_ch,
-                Chbox_var,
+                Band_Select_box_var,
                 BW_list,
                 Pw_option_var,
                 Mipi_data,
@@ -610,7 +606,7 @@ Win_GUI.bind(
                 Ch_option_var,
                 User_defined_band,
                 User_defined_ch,
-                Chbox_var,
+                Band_Select_box_var,
                 BW_list,
                 Pw_option_var,
                 Mipi_data,
