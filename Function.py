@@ -258,7 +258,8 @@ def Start(
     Ch_option_var,
     User_defined_band,
     User_defined_ch,
-    Band_Select_box_var,
+    Band_Select_Main_var,
+    Band_Select_Sub_var,
     BW_list,
     Pw_option_var,
     Mipi_data,
@@ -296,7 +297,7 @@ def Start(
 
     # Test code
     Test_band_ch_list = Check_testband(
-        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_box_var
+        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_Main_var, Band_Select_Sub_var
     )
     pwr_levels = Check_pwr_lvs(Pw_option_var)
 
@@ -328,7 +329,7 @@ def Start(
     Sig.Callbox_reset(Selected_path, Equip, Callbox, text_area)
 
     Test_band_ch_list = Check_testband(
-        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_box_var
+        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_Main_var, Band_Select_Sub_var
     )
     pwr_levels = Check_pwr_lvs(Pw_option_var)
 

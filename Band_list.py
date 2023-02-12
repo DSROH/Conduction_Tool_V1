@@ -26,19 +26,27 @@ def longest_value(dict_a):
         return values[0]
 
 
-def Check_testband(Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_box_var):
-    W_list = [1, 2, 4, 5, 8]
-    B_list = [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41]
-    N_list = [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78]
+def Check_testband(
+    Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_Main_var, Band_Select_Sub_var
+):
+    W_list = {0: [1, 2, 4, 5, 8], 1: [1, 2, 4]}
+    B_list = {
+        0: [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41],
+        1: [1, 2, 3, 4, 7, 25, 28, 66, 38, 39, 40, 41],
+    }
+    N_list = {
+        0: [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78],
+        1: [1, 2, 3, 7, 25, 28, 66, 38, 39, 40, 41, 77, 78],
+    }
 
     if Rat_option_var.get() == 1:  # 3G
-        Wlist = []
         Test_band_ch_list = {}
 
-        for c, i in enumerate(W_list):
-            if Band_Select_box_var[c].get() == True:
-                Wlist.append(i)
-        key = dict.fromkeys(Wlist)
+        Temp1 = [i for c, i in enumerate(W_list[0]) if Band_Select_Main_var[c].get() != True]
+        W_list[0] = [x for x in W_list[0] if x not in Temp1]
+
+        Temp2 = [i for c, i in enumerate(W_list[1]) if Band_Select_Sub_var[c].get() != True]
+        W_list[1] = [x for x in W_list[1] if x not in Temp2]
 
         fdd_1ch_list = {
             1: [10700],
@@ -59,17 +67,23 @@ def Check_testband(Rat_option_var, Ch_option_var, User_defined_band, User_define
         N_of_Channel = Ch_option_var.get()
 
         if N_of_Channel == 1:  # 1 CH
-            val = merge_dic(fdd_1ch_list, tdd_1ch_list)
+            Test_band_ch_list = {
+                0: {k: fdd_1ch_list[k] for k in W_list[0] if k in fdd_1ch_list},
+                1: {k: fdd_1ch_list[k] for k in W_list[1] if k in fdd_1ch_list},
+            }
+            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 2:  # 3 CH
-            val = merge_dic(fdd_3ch_list, tdd_3ch_list)
+            Test_band_ch_list = {
+                0: {k: fdd_3ch_list[k] for k in W_list[0] if k in fdd_3ch_list},
+                1: {k: fdd_3ch_list[k] for k in W_list[1] if k in fdd_3ch_list},
+            }
+            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 3:  # User Define
             new_char = [int(x.strip()) for x in User_defined_ch.split(",")]
             key = [int(s) for s in key]
             val = dict.fromkeys(key, new_char)
 
-        for k in key:
-            if k in val.keys():
-                Test_band_ch_list[k] = val[k]
+        print(Test_band_ch_list)
 
     elif Rat_option_var.get() == 2:  # LTE
         Blist = []
@@ -80,7 +94,7 @@ def Check_testband(Rat_option_var, Ch_option_var, User_defined_band, User_define
             key = User_defined_band[1:]
         else:
             for c, i in enumerate(B_list):
-                if Band_Select_box_var[c].get() == True:
+                if Band_Select_Main_var[c].get() == True:
                     Blist.append(i)
             key = dict.fromkeys(Blist)
 
@@ -144,12 +158,14 @@ def Check_testband(Rat_option_var, Ch_option_var, User_defined_band, User_define
             if k in val.keys():
                 Test_band_ch_list[k] = val[k]
 
+        print(Test_band_ch_list)
+
     elif Rat_option_var.get() == 3:  # NR
         Nlist = []
         Test_band_ch_list = {}
 
         for c, i in enumerate(N_list):
-            if Band_Select_box_var[c].get() == True:
+            if Band_Select_Main_var[c].get() == True:
                 Nlist.append(i)
         key = dict.fromkeys(Nlist)
 
@@ -216,57 +232,59 @@ def Check_testband(Rat_option_var, Ch_option_var, User_defined_band, User_define
             if k in val.keys():
                 Test_band_ch_list[k] = val[k]
 
+        print(Test_band_ch_list)
+
     return Test_band_ch_list
 
 
-def Selectall_band(Band_Select_box_var):
+def Selectall_band(Band_Select_Main_var):
     chk = []
-    for c, i in enumerate(Band_Select_box_var):
-        chk.append(Band_Select_box_var[c].get())
+    for c, i in enumerate(Band_Select_Main_var):
+        chk.append(Band_Select_Main_var[c].get())
 
     if all(chk):
         # 한개라도 체크되있다면, 전체 체크 해제
-        for count, j in enumerate(Band_Select_box_var):
-            Band_Select_box_var[count].set(False)
+        for count, j in enumerate(Band_Select_Main_var):
+            Band_Select_Main_var[count].set(False)
     else:
-        for count, j in enumerate(Band_Select_box_var):
-            Band_Select_box_var[count].set(True)
+        for count, j in enumerate(Band_Select_Main_var):
+            Band_Select_Main_var[count].set(True)
 
 
-def Selectfdd_band(Rat_option_var, Band_Select_box_var):
+def Selectfdd_band(Rat_option_var, Band_Select_Main_var):
     if Rat_option_var.get() == 2:  # LTE Main
         Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-        for c, i in enumerate(Band_Select_box_var):
-            # Band_Select_box_var[c].set(not Band_Select_box_var[c].get())
+        for c, i in enumerate(Band_Select_Main_var):
+            # Band_Select_Main_var[c].set(not Band_Select_Main_var[c].get())
             if c in Select_list:
-                Band_Select_box_var[c].set(True)
+                Band_Select_Main_var[c].set(True)
             else:
-                Band_Select_box_var[c].set(False)
+                Band_Select_Main_var[c].set(False)
     elif Rat_option_var.get() == 3:  # NR Main
         Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        for c, i in enumerate(Band_Select_box_var):
-            # Band_Select_box_var[c].set(not Band_Select_box_var[c].get())
+        for c, i in enumerate(Band_Select_Main_var):
+            # Band_Select_Main_var[c].set(not Band_Select_Main_var[c].get())
             if c in Select_list:
-                Band_Select_box_var[c].set(True)
+                Band_Select_Main_var[c].set(True)
             else:
-                Band_Select_box_var[c].set(False)
+                Band_Select_Main_var[c].set(False)
 
 
-def Selecttdd_band(Rat_option_var, Band_Select_box_var):
+def Selecttdd_band(Rat_option_var, Band_Select_Main_var):
     if Rat_option_var.get() == 2:  # LTE Main
         Select_list = [17, 18, 19, 20]
-        for c, i in enumerate(Band_Select_box_var):
+        for c, i in enumerate(Band_Select_Main_var):
             if c in Select_list:
-                Band_Select_box_var[c].set(True)
+                Band_Select_Main_var[c].set(True)
             else:
-                Band_Select_box_var[c].set(False)
+                Band_Select_Main_var[c].set(False)
     elif Rat_option_var.get() == 3:  # NR Main
         Select_list = [13, 14, 15, 16, 17, 18]
-        for c, i in enumerate(Band_Select_box_var):
+        for c, i in enumerate(Band_Select_Main_var):
             if c in Select_list:
-                Band_Select_box_var[c].set(True)
+                Band_Select_Main_var[c].set(True)
             else:
-                Band_Select_box_var[c].set(False)
+                Band_Select_Main_var[c].set(False)
 
 
 def Num_RB(rat, band, BW):
@@ -548,7 +566,7 @@ def Check_pwr_lvs(Pw_option_var):
     return pwr_levels
 
 
-def Init_BW_Setting(v, Band_index, Band_Select_box_var):
+def Init_BW_Setting(v, Band_index, Band_Select_Main_var):
 
     if v == 1:  # 3G
         BW_list = {
@@ -611,7 +629,7 @@ def Init_BW_Setting(v, Band_index, Band_Select_box_var):
     return BW_list
 
 
-def BW_setting(v, Band_index, Band_Select_box_var, BW_list):
+def BW_setting(v, Band_index, Band_Select_Main_var, BW_list):
 
     global ChildWin_bw
     global Band_list_var
@@ -619,8 +637,8 @@ def BW_setting(v, Band_index, Band_Select_box_var, BW_list):
     global BW_Label
 
     Active_band = []
-    for c, i in enumerate(Band_Select_box_var):
-        if Band_Select_box_var[c].get():
+    for c, i in enumerate(Band_Select_Main_var):
+        if Band_Select_Main_var[c].get():
             Active_band.append(int(Band_index[c][1:]))
 
     if v == 1:  # 3G
