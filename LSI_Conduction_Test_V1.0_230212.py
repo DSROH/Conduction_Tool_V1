@@ -41,10 +41,14 @@ Left_frame = ttkbst.Frame(Win_GUI)
 Left_frame.place(x=0, y=0, width=765, height=805)
 
 # %%
-canvas_frame = ttkbst.Labelframe(Left_frame, text="Canvas")  # Frame의 크기 따로 지정하지 않고, figsize로 결정됨
+canvas_frame = ttkbst.Labelframe(
+    Left_frame, text="Canvas"
+)  # Frame의 크기 따로 지정하지 않고, figsize로 결정됨
 canvas_frame.place(x=5, y=350, width=755, height=405)
 
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=(7.50, 3.85), dpi=100)
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
+    nrows=2, ncols=2, figsize=(7.50, 3.85), dpi=100
+)
 fig.set_facecolor("white")
 
 canvas = FigureCanvasTkAgg(fig, canvas_frame)
@@ -112,10 +116,52 @@ def Select_Main(v):
         B_list_Main = [1, 2, 4, 5, 8]
         rat = "B"
     elif v == 2:
-        B_list_Main = [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41]
+        B_list_Main = [
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            12,
+            13,
+            17,
+            18,
+            19,
+            20,
+            25,
+            26,
+            28,
+            66,
+            38,
+            39,
+            40,
+            41,
+        ]
         rat = "B"
     elif v == 3:
-        B_list_Main = [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78]
+        B_list_Main = [
+            1,
+            2,
+            3,
+            5,
+            7,
+            8,
+            12,
+            13,
+            20,
+            25,
+            26,
+            28,
+            66,
+            38,
+            39,
+            40,
+            41,
+            77,
+            78,
+        ]
         rat = "n"
 
     try:
@@ -129,7 +175,10 @@ def Select_Main(v):
     for count, i in enumerate(B_list_Main):
         Band_Select_Main_var[count] = ttkbst.BooleanVar()
         Chkbox_Main[count] = ttkbst.Checkbutton(
-            TX_Main_frame, text=f"{rat}{i}", width=5, variable=Band_Select_Main_var[count]
+            TX_Main_frame,
+            text=f"{rat}{i}",
+            width=5,
+            variable=Band_Select_Main_var[count],
         )
         Band_index_Main.append(f"{rat}{i}")
         if count == 0:
@@ -140,6 +189,7 @@ def Select_Main(v):
             pos_y = 5 + 35 * (count // 7)
         Chkbox_Main[count].place(x=pos_x, y=pos_y, width=50)
         Band_Select_Main_var[count].set(True)
+
 
 # %%
 TX_Sub_frame = ttkbst.Labelframe(Setting_frame, text="TX Sub")
@@ -188,6 +238,7 @@ def Select_Sub(v):
         Chkbox_Sub[count].place(x=pos_x, y=pos_y, width=50)
         Band_Select_Sub_var[count].set(True)
 
+
 # %%
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
 Rat_frame.place(x=0, y=0, width=140, height=50)
@@ -199,7 +250,10 @@ Rat_Option1 = ttkbst.Radiobutton(
     width=4,
     value=1,
     variable=Rat_option_var,
-    command=lambda: [Select_Main(Rat_option_var.get()), Select_Sub(Rat_option_var.get())],
+    command=lambda: [
+        Select_Main(Rat_option_var.get()),
+        Select_Sub(Rat_option_var.get()),
+    ],
 )
 Rat_Option1.place(x=10, y=6, width=35)
 
@@ -209,7 +263,10 @@ Rat_Option2 = ttkbst.Radiobutton(
     width=4,
     value=2,
     variable=Rat_option_var,
-    command=lambda: [Select_Main(Rat_option_var.get()), Select_Sub(Rat_option_var.get())],
+    command=lambda: [
+        Select_Main(Rat_option_var.get()),
+        Select_Sub(Rat_option_var.get()),
+    ],
 )
 Rat_Option2.place(x=50, y=6, width=40)
 
@@ -219,7 +276,10 @@ Rat_Option3 = ttkbst.Radiobutton(
     width=4,
     value=3,
     variable=Rat_option_var,
-    command=lambda: [Select_Main(Rat_option_var.get()), Select_Sub(Rat_option_var.get())],
+    command=lambda: [
+        Select_Main(Rat_option_var.get()),
+        Select_Sub(Rat_option_var.get()),
+    ],
 )
 Rat_Option3.place(x=95, y=6, width=40)
 
@@ -253,10 +313,14 @@ def func_userch():
     ChildWin_userch.geometry("360x50")
 
     Band = [x for x in Band_index_Main]
-    Combo_user_define_ch = ttkbst.Combobox(ChildWin_userch, values=Band, font=("Calibri", 10))
+    Combo_user_define_ch = ttkbst.Combobox(
+        ChildWin_userch, values=Band, font=("Calibri", 10)
+    )
     Combo_user_define_ch.place(x=10, y=10, width=60, height=30)
     Combo_user_define_ch.current(0)
-    Entry_Userdefined_ch = ttkbst.Entry(ChildWin_userch, justify=LEFT, font=("Consolas", 10))
+    Entry_Userdefined_ch = ttkbst.Entry(
+        ChildWin_userch, justify=LEFT, font=("Consolas", 10)
+    )
     Entry_Userdefined_ch.insert(0, User_defined_ch)
     Entry_Userdefined_ch.place(x=80, y=10, width=200, height=30)
     OK_btn = ttkbst.Button(ChildWin_userch, text="OK", command=func_userch_ok)
@@ -279,13 +343,20 @@ def func_userch_ok():
 # User Define 없을 경우 Error 방지 목적으로 빈 리스트 생성, user define 시 값 지정됨
 User_defined_band = []
 User_defined_ch = []
-Btn_user_defined_ch = ttkbst.Button(Setting_frame, text="User Defined CH (F9)", style="danger.TButton", command=func_userch)
+Btn_user_defined_ch = ttkbst.Button(
+    Setting_frame,
+    text="User Defined CH (F9)",
+    style="danger.TButton",
+    command=func_userch,
+)
 Btn_user_defined_ch.place(x=260, y=15, width=140, height=30)
 Win_GUI.bind("<F9>", lambda event: [func_userch()])
 
 # %%
 Pw_option_var = ttkbst.IntVar()
-Btn_pwsetting = ttkbst.Button(Setting_frame, text="Power Level (F11)", style="danger.TButton", command=func_userch)
+Btn_pwsetting = ttkbst.Button(
+    Setting_frame, text="Power Level (F11)", style="danger.TButton", command=func_userch
+)
 Btn_pwsetting.place(x=525, y=15, width=120, height=30)
 
 Win_GUI.bind("<F11>", lambda event: [func_userch()])
@@ -296,17 +367,27 @@ Select_Main_frame = ttkbst.Labelframe(Setting_frame, text="Main")
 Select_Main_frame.place(x=405, y=50, width=60, height=120)
 
 Select_Mainall = ttkbst.Button(
-    Select_Main_frame, text="All", command=lambda: [blist.Selectall_band(Band_Select_Main_var)]
+    Select_Main_frame,
+    text="All",
+    command=lambda: [blist.Selectall_band(Band_Select_Main_var)],
 )
 Select_Mainall.place(x=4, y=0, width=50, height=29)
 
 Select_Mainfdd = ttkbst.Button(
-    Select_Main_frame, text="FDD", command=lambda: [blist.Selectfdd_band(Rat_option_var, Band_Select_Main_var)]
+    Select_Main_frame,
+    text="FDD",
+    command=lambda: [
+        blist.Selectfdd_band(Rat_option_var, "Main", Band_Select_Main_var)
+    ],
 )
 Select_Mainfdd.place(x=4, y=34, width=50, height=29)
 
 Select_Maintdd = ttkbst.Button(
-    Select_Main_frame, text="TDD", command=lambda: [blist.Selecttdd_band(Rat_option_var, Band_Select_Main_var)]
+    Select_Main_frame,
+    text="TDD",
+    command=lambda: [
+        blist.Selecttdd_band(Rat_option_var, "Main", Band_Select_Main_var)
+    ],
 )
 Select_Maintdd.place(x=4, y=68, width=50, height=29)
 
@@ -316,12 +397,16 @@ Select_Sub_frame = ttkbst.Labelframe(Setting_frame, text="Sub")
 Select_Sub_frame.place(x=405, y=170, width=60, height=80)
 
 Select_Subfdd = ttkbst.Button(
-    Select_Sub_frame, text="FDD", command=lambda: [blist.Selectfdd_band(Rat_option_var, Band_Select_Sub_var)]
+    Select_Sub_frame,
+    text="FDD",
+    command=lambda: [blist.Selectfdd_band(Rat_option_var, "Sub", Band_Select_Sub_var)],
 )
 Select_Subfdd.place(x=4, y=0, width=50, height=27)
 
 Select_Subtdd = ttkbst.Button(
-    Select_Sub_frame, text="TDD", command=lambda: [blist.Selecttdd_band(Rat_option_var, Band_Select_Sub_var)]
+    Select_Sub_frame,
+    text="TDD",
+    command=lambda: [blist.Selecttdd_band(Rat_option_var, "Sub", Band_Select_Sub_var)],
 )
 Select_Subtdd.place(x=4, y=31, width=50, height=27)
 
@@ -430,7 +515,7 @@ def Callback_CB(combo1, Rat_option_var):
             "<F3>",
             lambda event: [
                 Run_mode_var.set(3),
-                Rat_option_var.set(3), # NR Main Selected
+                Rat_option_var.set(3),  # NR Main Selected
                 Rat_Option1.config(state=tk.DISABLED),  # 3G disable
                 Rat_Option2.config(state=tk.DISABLED),  # LTE disable
                 Rat_Option3.config(state=tk.NORMAL),  # NR enable
@@ -438,6 +523,7 @@ def Callback_CB(combo1, Rat_option_var):
         )
     else:
         msgbox.showwarning("Warning", "Select Call_Box")
+
 
 # %%
 toolbar_frame = ttkbst.Frame(Left_frame)
@@ -492,7 +578,9 @@ LB_posy = {
 }
 
 for count, i in enumerate(Mipi_data):
-    Mipi_Label[count] = ttkbst.Label(MIPI_frame, text=f"{i}", font=("Consolas", 8), anchor="e")
+    Mipi_Label[count] = ttkbst.Label(
+        MIPI_frame, text=f"{i}", font=("Consolas", 8), anchor="e"
+    )
     for c, j in enumerate(Mipi_data[i]):
         Mipi_data[i][c] = ttkbst.Entry(MIPI_frame, justify=RIGHT, font=("Consolas", 8))
         Mipi_data[i][c].insert(0, j)
@@ -628,12 +716,20 @@ Win_GUI.bind("<F12>", lambda event: [func.add_file(log_path)])
 Btn_power = ttkbst.Button(
     path_frame,
     text="Power ON (F4)",
-    command=lambda: [threading.Thread(target=func.Power_on, args=(combo2, combo3, combo4, text_area)).start()],
+    command=lambda: [
+        threading.Thread(
+            target=func.Power_on, args=(combo2, combo3, combo4, text_area)
+        ).start()
+    ],
 )
 Btn_power.place(x=510, y=7, width=120, height=30)
 Win_GUI.bind(
     "<F4>",
-    lambda event: [threading.Thread(target=func.Power_on, args=(combo2, combo3, combo4, text_area)).start()],
+    lambda event: [
+        threading.Thread(
+            target=func.Power_on, args=(combo2, combo3, combo4, text_area)
+        ).start()
+    ],
 )
 
 # %%
@@ -648,14 +744,20 @@ Pw_option_var.set(1)
 Run_mode_var.set(2)
 
 # %%
-BW_list = blist.Init_BW_Setting(Rat_option_var.get(), Band_index_Main, Band_Select_Main_var)
+BW_list = blist.Init_BW_Setting(
+    Rat_option_var.get(), Band_index_Main, Band_Select_Main_var
+)
 
 Btn_bwsetting = ttkbst.Button(
     Setting_frame,
     text="Define BW (F10)",
     style="danger.TButton",
     command=lambda: [
-        BW_list.update(blist.BW_setting(Rat_option_var.get(), Band_index_Main, Band_Select_Main_var, BW_list))
+        BW_list.update(
+            blist.BW_setting(
+                Rat_option_var.get(), Band_index_Main, Band_Select_Main_var, BW_list
+            )
+        )
     ],
 )
 Btn_bwsetting.place(x=405, y=15, width=115, height=30)
@@ -663,7 +765,11 @@ Btn_bwsetting.place(x=405, y=15, width=115, height=30)
 Win_GUI.bind(
     "<F10>",
     lambda event: [
-        BW_list.update(blist.BW_setting(Rat_option_var.get(), Band_index_Main, Band_Select_Main_var, BW_list))
+        BW_list.update(
+            blist.BW_setting(
+                Rat_option_var.get(), Band_index_Main, Band_Select_Main_var, BW_list
+            )
+        )
     ],
 )
 
@@ -760,5 +866,3 @@ Win_GUI.bind(
 # %%
 Win_GUI.resizable(False, False)
 Win_GUI.mainloop()
-
-
