@@ -234,7 +234,7 @@ def Selectall_band(Band_Select_box_var):
 
 
 def Selectfdd_band(Rat_option_var, Band_Select_box_var):
-    if Rat_option_var.get() == 2:  # LTE
+    if Rat_option_var.get() == 2:  # LTE Main
         Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         for c, i in enumerate(Band_Select_box_var):
             # Band_Select_box_var[c].set(not Band_Select_box_var[c].get())
@@ -242,7 +242,7 @@ def Selectfdd_band(Rat_option_var, Band_Select_box_var):
                 Band_Select_box_var[c].set(True)
             else:
                 Band_Select_box_var[c].set(False)
-    elif Rat_option_var.get() == 3:  # NR
+    elif Rat_option_var.get() == 3:  # NR Main
         Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         for c, i in enumerate(Band_Select_box_var):
             # Band_Select_box_var[c].set(not Band_Select_box_var[c].get())
@@ -253,14 +253,14 @@ def Selectfdd_band(Rat_option_var, Band_Select_box_var):
 
 
 def Selecttdd_band(Rat_option_var, Band_Select_box_var):
-    if Rat_option_var.get() == 2:  # LTE
+    if Rat_option_var.get() == 2:  # LTE Main
         Select_list = [17, 18, 19, 20]
         for c, i in enumerate(Band_Select_box_var):
             if c in Select_list:
                 Band_Select_box_var[c].set(True)
             else:
                 Band_Select_box_var[c].set(False)
-    elif Rat_option_var.get() == 3:  # NR
+    elif Rat_option_var.get() == 3:  # NR Main
         Select_list = [13, 14, 15, 16, 17, 18]
         for c, i in enumerate(Band_Select_box_var):
             if c in Select_list:
