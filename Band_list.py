@@ -83,20 +83,18 @@ def Check_testband(
             key = [int(s) for s in key]
             val = dict.fromkeys(key, new_char)
 
-        print(Test_band_ch_list)
-
     elif Rat_option_var.get() == 2:  # LTE
-        Blist = []
         Test_band_ch_list = {}
         N_of_Channel = Ch_option_var.get()
 
         if N_of_Channel == 3:
             key = User_defined_band[1:]
         else:
-            for c, i in enumerate(B_list):
-                if Band_Select_Main_var[c].get() == True:
-                    Blist.append(i)
-            key = dict.fromkeys(Blist)
+            Temp1 = [i for c, i in enumerate(B_list[0]) if Band_Select_Main_var[c].get() != True]
+            B_list[0] = [x for x in B_list[0] if x not in Temp1]
+
+            Temp2 = [i for c, i in enumerate(B_list[1]) if Band_Select_Sub_var[c].get() != True]
+            B_list[1] = [x for x in B_list[1] if x not in Temp2]
 
         fdd_1ch_list = {
             1: [300],
@@ -147,27 +145,31 @@ def Check_testband(
 
         if N_of_Channel == 1:  # 1 CH
             val = merge_dic(fdd_1ch_list, tdd_1ch_list)
+            Test_band_ch_list = {
+                0: {k: val[k] for k in B_list[0] if k in val},
+                1: {k: val[k] for k in B_list[1] if k in val},
+            }
+            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 2:  # 3 CH
             val = merge_dic(fdd_3ch_list, tdd_3ch_list)
+            Test_band_ch_list = {
+                0: {k: val[k] for k in B_list[0] if k in val},
+                1: {k: val[k] for k in B_list[1] if k in val},
+            }
+            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 3:  # User Define
             new_char = [int(x.strip()) for x in User_defined_ch.split(",")]
             key = [int(s) for s in key]
             val = dict.fromkeys(key, new_char)
 
-        for k in key:
-            if k in val.keys():
-                Test_band_ch_list[k] = val[k]
-
-        print(Test_band_ch_list)
-
     elif Rat_option_var.get() == 3:  # NR
-        Nlist = []
         Test_band_ch_list = {}
 
-        for c, i in enumerate(N_list):
-            if Band_Select_Main_var[c].get() == True:
-                Nlist.append(i)
-        key = dict.fromkeys(Nlist)
+        Temp1 = [i for c, i in enumerate(N_list[0]) if Band_Select_Main_var[c].get() != True]
+        N_list[0] = [x for x in N_list[0] if x not in Temp1]
+
+        Temp2 = [i for c, i in enumerate(N_list[1]) if Band_Select_Sub_var[c].get() != True]
+        N_list[1] = [x for x in N_list[1] if x not in Temp2]
 
         fdd_1ch_list = {
             1: [428000],
@@ -221,70 +223,92 @@ def Check_testband(
 
         if N_of_Channel == 1:  # 1 CH
             val = merge_dic(fdd_1ch_list, tdd_1ch_list)
+            Test_band_ch_list = {
+                0: {k: val[k] for k in N_list[0] if k in val},
+                1: {k: val[k] for k in N_list[1] if k in val},
+            }
+            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 2:  # 3 CH
             val = merge_dic(fdd_3ch_list, tdd_3ch_list)
+            Test_band_ch_list = {
+                0: {k: val[k] for k in N_list[0] if k in val},
+                1: {k: val[k] for k in N_list[1] if k in val},
+            }
+            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 3:  # User Define
             new_char = [int(x.strip()) for x in User_defined_ch.split(",")]
             key = [int(s) for s in key]
             val = dict.fromkeys(key, new_char)
-
-        for k in key:
-            if k in val.keys():
-                Test_band_ch_list[k] = val[k]
 
         print(Test_band_ch_list)
 
     return Test_band_ch_list
 
 
-def Selectall_band(Band_Select_Main_var):
+def Selectall_band(Band_Select_var):
     chk = []
-    for c, i in enumerate(Band_Select_Main_var):
-        chk.append(Band_Select_Main_var[c].get())
+    for c, i in enumerate(Band_Select_var):
+        chk.append(Band_Select_var[c].get())
 
     if all(chk):
         # 한개라도 체크되있다면, 전체 체크 해제
-        for count, j in enumerate(Band_Select_Main_var):
-            Band_Select_Main_var[count].set(False)
+        for count, j in enumerate(Band_Select_var):
+            Band_Select_var[count].set(False)
     else:
-        for count, j in enumerate(Band_Select_Main_var):
-            Band_Select_Main_var[count].set(True)
+        for count, j in enumerate(Band_Select_var):
+            Band_Select_var[count].set(True)
 
 
-def Selectfdd_band(Rat_option_var, Band_Select_Main_var):
+def Selectfdd_band(Rat_option_var, TX_path, Band_Select_var):
     if Rat_option_var.get() == 2:  # LTE Main
-        Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-        for c, i in enumerate(Band_Select_Main_var):
-            # Band_Select_Main_var[c].set(not Band_Select_Main_var[c].get())
+        if TX_path == "Main":
+            Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        elif TX_path == "Sub":
+            Select_list = [0, 1, 2, 3, 4, 5, 6, 7]
+
+        for c, i in enumerate(Band_Select_var):
+            # Band_Select_var[c].set(not Band_Select_var[c].get())
             if c in Select_list:
-                Band_Select_Main_var[c].set(True)
+                Band_Select_var[c].set(True)
             else:
-                Band_Select_Main_var[c].set(False)
+                Band_Select_var[c].set(False)
     elif Rat_option_var.get() == 3:  # NR Main
-        Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        for c, i in enumerate(Band_Select_Main_var):
-            # Band_Select_Main_var[c].set(not Band_Select_Main_var[c].get())
+        if TX_path == "Main":
+            Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        elif TX_path == "Sub":
+            Select_list = [0, 1, 2, 3, 4, 5, 6]
+
+        for c, i in enumerate(Band_Select_var):
+            # Band_Select_var[c].set(not Band_Select_var[c].get())
             if c in Select_list:
-                Band_Select_Main_var[c].set(True)
+                Band_Select_var[c].set(True)
             else:
-                Band_Select_Main_var[c].set(False)
+                Band_Select_var[c].set(False)
 
 
-def Selecttdd_band(Rat_option_var, Band_Select_Main_var):
+def Selecttdd_band(Rat_option_var, TX_path, Band_Select_var):
     if Rat_option_var.get() == 2:  # LTE Main
-        Select_list = [17, 18, 19, 20]
-        for c, i in enumerate(Band_Select_Main_var):
+        if TX_path == "Main":
+            Select_list = [17, 18, 19, 20]
+        elif TX_path == "Sub":
+            Select_list = [8, 9, 10, 11]
+
+        for c, i in enumerate(Band_Select_var):
             if c in Select_list:
-                Band_Select_Main_var[c].set(True)
+                Band_Select_var[c].set(True)
             else:
-                Band_Select_Main_var[c].set(False)
+                Band_Select_var[c].set(False)
     elif Rat_option_var.get() == 3:  # NR Main
-        Select_list = [13, 14, 15, 16, 17, 18]
-        for c, i in enumerate(Band_Select_Main_var):
+        if TX_path == "Main":
+            Select_list = [13, 14, 15, 16, 17, 18]
+        elif TX_path == "Sub":
+            Select_list = [7, 8, 9, 10, 11, 12]
+
+        for c, i in enumerate(Band_Select_var):
             if c in Select_list:
-                Band_Select_Main_var[c].set(True)
+                Band_Select_var[c].set(True)
             else:
-                Band_Select_Main_var[c].set(False)
+                Band_Select_var[c].set(False)
 
 
 def Num_RB(rat, band, BW):
