@@ -309,7 +309,7 @@ def Selectall_band(Rat_option_var, TX_path, Band_Select_var):
     for c, i in enumerate(Band_Select_var):
         if (Rat_option_var.get() == 2) & (TX_path == "Sub") & (c in [4, 6, 7, 8, 9, 10, 11, 12, 14]):
             pass
-        elif (Rat_option_var.get() == 3) & (TX_path == "Sub") & (c in [3, 5, 6, 7, 8, 10]):
+        elif (Rat_option_var.get() == 3) & (TX_path == "Sub") & (c in [3, 5, 6, 7, 8, 10, 14]):
             pass
         else:
             chk.append(Band_Select_var[c].get())
