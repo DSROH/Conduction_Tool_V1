@@ -8,11 +8,71 @@ def merge_dic(x, y):
     return z
 
 
-def dict_compare_list(list_a, dict_a):
-    keys_to_remove = [key for key in dict_a.keys() if key not in list_a]
+def dict_compare_list(v, list_a):
+    if v == 1:  # 3G
+        Blist = {
+            1: [5],
+            2: [5],
+            4: [5],
+            5: [5],
+            8: [5],
+        }
+        rat = "B"
+    elif v == 2:  # LTE
+        Blist = {
+            1: [5, 10, 15, 20],
+            2: [5, 10, 15, 20],
+            3: [5, 10, 15, 20],
+            4: [5, 10, 15, 20],
+            5: [5, 10],
+            7: [5, 10, 15, 20],
+            8: [5, 10],
+            12: [5, 10],
+            13: [5, 10],
+            17: [5, 10],
+            18: [5, 10, 15],
+            19: [5, 10, 15],
+            20: [5, 10, 15, 20],
+            25: [5, 10, 15, 20],
+            26: [5, 10, 15],
+            28: [5, 10, 15, 20],
+            66: [5, 10, 15, 20],
+            38: [5, 10, 15, 20],
+            39: [5, 10, 15, 20],
+            40: [5, 10, 15, 20],
+            41: [5, 10, 15, 20],
+        }
+        rat = "B"
+    elif v == 3:  # NR
+        Blist = {
+            1: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+            2: [5, 10, 15, 20, 25, 30, 35, 40],
+            3: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+            5: [5, 10, 15, 20, 25],
+            7: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+            8: [5, 10, 15, 20, 25, 30, 35],
+            12: [5, 10, 15],
+            13: [5, 10],
+            18: [5, 10, 15],
+            20: [5, 10, 15, 20],
+            25: [5, 10, 15, 20, 25, 30, 35, 40, 45],
+            26: [5, 10, 15, 20, 25, 30],
+            28: [5, 10, 15, 20, 25, 30],
+            66: [5, 10, 15, 20, 25, 30, 35, 40, 45],
+            38: [5, 10, 15, 20, 25, 30, 35, 40],
+            39: [5, 10, 15, 20, 25, 30, 35, 40],
+            40: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
+            41: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
+            77: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
+            78: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
+        }
+        rat = "n"
+
+    keys_to_remove = [key for key in Blist.keys() if key not in list_a]
     for key in keys_to_remove:
-        dict_a.pop(key)
-    return dict_a
+        Blist.pop(key)
+
+    return rat, Blist
 
 
 def longest_value(dict_a):
@@ -32,11 +92,11 @@ def Check_testband(
     W_list = {0: [1, 2, 4, 5, 8], 1: [1, 2, 4]}
     B_list = {
         0: [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41],
-        1: [1, 2, 3, 4, 7, 25, 28, 66, 38, 39, 40, 41],
+        1: [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41],
     }
     N_list = {
         0: [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78],
-        1: [1, 2, 3, 7, 25, 28, 66, 38, 39, 40, 41, 77, 78],
+        1: [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78],
     }
 
     if Rat_option_var.get() == 1:  # 3G
@@ -240,15 +300,19 @@ def Check_testband(
             key = [int(s) for s in key]
             val = dict.fromkeys(key, new_char)
 
-        print(Test_band_ch_list)
-
     return Test_band_ch_list
 
 
-def Selectall_band(Band_Select_var):
+def Selectall_band(Rat_option_var, TX_path, Band_Select_var):
     chk = []
+
     for c, i in enumerate(Band_Select_var):
-        chk.append(Band_Select_var[c].get())
+        if (Rat_option_var.get() == 2) & (TX_path == "Sub") & (c in [4, 6, 7, 8, 9, 10, 11, 12, 14]):
+            pass
+        elif (Rat_option_var.get() == 3) & (TX_path == "Sub") & (c in [3, 5, 6, 7, 8, 10]):
+            pass
+        else:
+            chk.append(Band_Select_var[c].get())
 
     if all(chk):
         # 한개라도 체크되있다면, 전체 체크 해제
@@ -256,7 +320,12 @@ def Selectall_band(Band_Select_var):
             Band_Select_var[count].set(False)
     else:
         for count, j in enumerate(Band_Select_var):
-            Band_Select_var[count].set(True)
+            if (Rat_option_var.get() == 2) & (TX_path == "Sub") & (count in [4, 6, 7, 8, 9, 10, 11, 12, 14]):
+                pass
+            elif (Rat_option_var.get() == 3) & (TX_path == "Sub") & (count in [3, 5, 6, 7, 8, 10, 14]):
+                pass
+            else:
+                Band_Select_var[count].set(True)
 
 
 def Selectfdd_band(Rat_option_var, TX_path, Band_Select_var):
@@ -264,26 +333,39 @@ def Selectfdd_band(Rat_option_var, TX_path, Band_Select_var):
         if TX_path == "Main":
             Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         elif TX_path == "Sub":
-            Select_list = [0, 1, 2, 3, 4, 5, 6, 7]
+            Select_list = [0, 1, 2, 3, 5, 13, 15, 16]
 
         for c, i in enumerate(Band_Select_var):
             # Band_Select_var[c].set(not Band_Select_var[c].get())
-            if c in Select_list:
-                Band_Select_var[c].set(True)
-            else:
-                Band_Select_var[c].set(False)
+            if TX_path == "Main":
+                if c in Select_list:
+                    Band_Select_var[c].set(True)
+                else:
+                    Band_Select_var[c].set(False)
+            elif TX_path == "Sub":
+                if c in Select_list:
+                    Band_Select_var[c].set(True)
+                else:
+                    Band_Select_var[c].set(False)
+
     elif Rat_option_var.get() == 3:  # NR Main
         if TX_path == "Main":
             Select_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         elif TX_path == "Sub":
-            Select_list = [0, 1, 2, 3, 4, 5, 6]
+            Select_list = [0, 1, 2, 4, 9, 11, 12]
 
         for c, i in enumerate(Band_Select_var):
             # Band_Select_var[c].set(not Band_Select_var[c].get())
-            if c in Select_list:
-                Band_Select_var[c].set(True)
-            else:
-                Band_Select_var[c].set(False)
+            if TX_path == "Main":
+                if c in Select_list:
+                    Band_Select_var[c].set(True)
+                else:
+                    Band_Select_var[c].set(False)
+            elif TX_path == "Sub":
+                if c in Select_list:
+                    Band_Select_var[c].set(True)
+                else:
+                    Band_Select_var[c].set(False)
 
 
 def Selecttdd_band(Rat_option_var, TX_path, Band_Select_var):
@@ -291,18 +373,19 @@ def Selecttdd_band(Rat_option_var, TX_path, Band_Select_var):
         if TX_path == "Main":
             Select_list = [17, 18, 19, 20]
         elif TX_path == "Sub":
-            Select_list = [8, 9, 10, 11]
+            Select_list = [17, 18, 19, 20]
 
         for c, i in enumerate(Band_Select_var):
             if c in Select_list:
                 Band_Select_var[c].set(True)
             else:
                 Band_Select_var[c].set(False)
+
     elif Rat_option_var.get() == 3:  # NR Main
         if TX_path == "Main":
             Select_list = [13, 14, 15, 16, 17, 18]
         elif TX_path == "Sub":
-            Select_list = [7, 8, 9, 10, 11, 12]
+            Select_list = [13, 15, 16, 17, 18]
 
         for c, i in enumerate(Band_Select_var):
             if c in Select_list:
@@ -570,258 +653,445 @@ def NR_channel_converter(band, channel):
     return rx, tx
 
 
-def Check_pwr_lvs(Pw_option_var):
+def Check_pwr_lvs(variable):
 
     pwr_levels = []
 
-    if Pw_option_var.get() == 1:
+    if variable == 1:
         pwr_levels = [23, 20, 15, 10, 5, 0]
 
-    elif Pw_option_var.get() == 2:
-
-        for i in range(23, -1, -1):
+    elif variable == 2:
+        for i in range(23, -1, -3):
             pwr_levels.append(i)
 
-    elif Pw_option_var.get() == 3:
-
+    elif variable == 3:
+        for i in range(23, -1, -1):
+            pwr_levels.append(i)
+    elif variable == 4:
         for i in range(23, -11, -1):
+            pwr_levels.append(i)
+    elif variable == 5:
+        for i in range(23, -46, -1):
             pwr_levels.append(i)
 
     return pwr_levels
 
 
-def Init_BW_Setting(v, Band_index, Band_Select_Main_var):
+def Power_setting(Pw_option_var):
+    global ChildWin_pw
+
+    try:
+        ChildWin_pw.destroy()
+    except:
+        pass
+    ChildWin_pw = ttkbst.Toplevel(title="Power Levels Setting")
+    ChildWin_pw.attributes("-topmost", True)
+    win_width = 200
+    win_height = 210
+    ChildWin_pw.geometry(f"{win_width}x{win_height}")
+    Range_text = ["5dB Step", "3dB Step", "Max. Power ~ 0dBm", "Max. Power ~ -10dBm", "Max. Power ~ Min. Power"]
+    Range = [None] * len(Range_text)
+    posx = 10
+
+    for i in range(len(Range_text)):
+        Range[i] = ttkbst.Radiobutton(
+            ChildWin_pw,
+            text=Range_text[i],
+            value=i + 1,
+            variable=Pw_option_var,
+        )
+        posy = 30 * i + 10
+        Range[i].place(x=posx, y=posy, width=180, height=30)
+
+    Pwr_btn_ok = ttkbst.Button(ChildWin_pw, text="OK", bootstyle="info")
+    Pwr_btn_ok.place(x=145, y=170, width=45, height=30)
+    Pwr_btn_ok.config(command=lambda: [Power_btn_ok()])
+
+    scr_width = int(ChildWin_pw.winfo_screenwidth())
+    scr_height = int(ChildWin_pw.winfo_screenheight())
+    x = int((scr_width - win_width) / 2)
+    y = int((scr_height - win_height) / 2)
+    ChildWin_pw.geometry(f"{win_width}x{win_height}+{x}+{y}")
+    ChildWin_pw.resizable(False, False)
+
+    return Pw_option_var
+
+
+def Power_btn_ok():
+    global ChildWin_pw
+    ChildWin_pw.destroy()
+
+
+def Init_BW_Setting(v):
 
     if v == 1:  # 3G
         BW_list = {
-            1: [5],
-            2: [5],
-            4: [5],
-            5: [5],
-            8: [5],
+            0: {
+                1: [5],
+                2: [5],
+                4: [5],
+                5: [5],
+                8: [5],
+            },
+            1: {
+                1: [5],
+                2: [5],
+                4: [5],
+            },
         }
 
     elif v == 2:  # LTE
         BW_list = {
-            1: [10],
-            2: [10],
-            3: [10],
-            4: [10],
-            5: [10],
-            7: [10],
-            8: [10],
-            12: [10],
-            13: [10],
-            17: [10],
-            18: [10],
-            19: [10],
-            20: [10],
-            25: [10],
-            26: [10],
-            28: [10],
-            66: [10],
-            38: [10],
-            39: [10],
-            40: [10],
-            41: [10],
+            0: {
+                1: [10],
+                2: [10],
+                3: [10],
+                4: [10],
+                5: [10],
+                7: [10],
+                8: [10],
+                12: [10],
+                13: [10],
+                17: [10],
+                18: [10],
+                19: [10],
+                20: [10],
+                25: [10],
+                26: [10],
+                28: [10],
+                66: [10],
+                38: [10],
+                39: [10],
+                40: [10],
+                41: [10],
+            },
+            1: {
+                1: [10],
+                2: [10],
+                3: [10],
+                4: [10],
+                7: [10],
+                25: [10],
+                28: [10],
+                66: [10],
+                38: [10],
+                39: [10],
+                40: [10],
+                41: [10],
+            },
         }
-
     elif v == 3:  # NR
         BW_list = {
-            1: [10],
-            2: [10],
-            3: [10],
-            5: [10],
-            7: [10],
-            8: [10],
-            12: [10],
-            13: [10],
-            18: [10],
-            20: [10],
-            25: [10],
-            26: [10],
-            28: [10],
-            66: [10],
-            38: [10],
-            39: [10],
-            40: [10],
-            41: [10],
-            77: [10],
-            78: [10],
+            0: {
+                1: [10],
+                2: [10],
+                3: [10],
+                5: [10],
+                7: [10],
+                8: [10],
+                12: [10],
+                13: [10],
+                18: [10],
+                20: [10],
+                25: [10],
+                26: [10],
+                28: [10],
+                66: [10],
+                38: [10],
+                39: [10],
+                40: [10],
+                41: [10],
+                77: [10],
+                78: [10],
+            },
+            1: {
+                1: [10],
+                2: [10],
+                3: [10],
+                7: [10],
+                25: [10],
+                28: [10],
+                66: [10],
+                38: [10],
+                39: [10],
+                40: [10],
+                41: [10],
+                77: [10],
+                78: [10],
+            },
         }
 
     return BW_list
 
 
-def BW_setting(v, Band_index, Band_Select_Main_var, BW_list):
+def BW_setting(v, Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Select_Sub_var, BW_list):
 
     global ChildWin_bw
     global Band_list_var
     global BW_list_var
     global BW_Label
 
-    Active_band = []
+    Active_band_main = []
+    Active_band_sub = []
     for c, i in enumerate(Band_Select_Main_var):
         if Band_Select_Main_var[c].get():
-            Active_band.append(int(Band_index[c][1:]))
+            Active_band_main.append(int(Band_index_Main[c][1:]))
 
-    if v == 1:  # 3G
-        Band_list = {
-            1: [5],
-            2: [5],
-            4: [5],
-            5: [5],
-            8: [5],
-        }
-        rat = "B"
+    for c, i in enumerate(Band_Select_Sub_var):
+        if Band_Select_Sub_var[c].get():
+            Active_band_sub.append(int(Band_index_Sub[c][1:]))
 
-    elif v == 2:  # LTE
-        Band_list = {
-            1: [5, 10, 15, 20],
-            2: [5, 10, 15, 20],
-            3: [5, 10, 15, 20],
-            4: [5, 10, 15, 20],
-            5: [5, 10],
-            7: [5, 10, 15, 20],
-            8: [5, 10],
-            12: [5, 10],
-            13: [5, 10],
-            17: [5, 10],
-            18: [5, 10, 15],
-            19: [5, 10, 15],
-            20: [5, 10, 15, 20],
-            25: [5, 10, 15, 20],
-            26: [5, 10, 15],
-            28: [5, 10, 15, 20],
-            66: [5, 10, 15, 20],
-            38: [5, 10, 15, 20],
-            39: [5, 10, 15, 20],
-            40: [5, 10, 15, 20],
-            41: [5, 10, 15, 20],
-        }
-        rat = "B"
+    rat, dict1 = dict_compare_list(v, Active_band_main)
+    rat, dict2 = dict_compare_list(v, Active_band_sub)
 
-    elif v == 3:  # NR
-        Band_list = {
-            1: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-            2: [5, 10, 15, 20, 25, 30, 35, 40],
-            3: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-            5: [5, 10, 15, 20, 25],
-            7: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-            8: [5, 10, 15, 20, 25, 30, 35],
-            12: [5, 10, 15],
-            13: [5, 10],
-            18: [5, 10, 15],
-            20: [5, 10, 15, 20],
-            25: [5, 10, 15, 20, 25, 30, 35, 40, 45],
-            26: [5, 10, 15, 20, 25, 30],
-            28: [5, 10, 15, 20, 25, 30],
-            66: [5, 10, 15, 20, 25, 30, 35, 40, 45],
-            38: [5, 10, 15, 20, 25, 30, 35, 40],
-            39: [5, 10, 15, 20, 25, 30, 35, 40],
-            40: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
-            41: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
-            77: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
-            78: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
-        }
-        rat = "n"
-
-    Band_list = dict_compare_list(Active_band, Band_list)
+    Band_list = {0: dict1, 1: dict2}
 
     try:
         ChildWin_bw.destroy()
     except:
         pass
-
+    BW_frame = {0: [], 1: []}
+    Band_list_var = {0: [], 1: []}
+    BW_list_var = {0: [], 1: []}
+    BW_Label = {0: [], 1: []}
     ChildWin_bw = ttkbst.Toplevel(title="Bandwidth Setting")
     ChildWin_bw.attributes("-topmost", True)
+    x_max = [0, 0]
+    y_max = [0, 0]
+    x_start = [0, 0]
 
-    Band_list_var = [None] * len(Band_list)
-    BW_list_var = [None] * len(Band_list)
-    BW_Label = [None] * len(Band_list)
+    for key in Band_list:
+        if Band_list[key]:
+            if key == 0:
+                BW_frame[key] = ttkbst.Labelframe(ChildWin_bw, text="Main")
+            elif key == 1:
+                BW_frame[key] = ttkbst.Labelframe(ChildWin_bw, text="Sub")
 
-    geom_max_x = []
-    geom_max_y = []
+            Band_list_var[key] = [None] * len(Band_list[key])
+            BW_list_var[key] = [None] * len(Band_list[key])
+            BW_Label[key] = [None] * len(Band_list[key])
 
-    for count, i in enumerate(Band_list):
-        pos_x1 = 10
-        pos_y1 = 5 + 35 * count
-        Band_list_var[count] = ttkbst.Label(ChildWin_bw, text=f"{rat}{i}")
-        Band_list_var[count].place(x=pos_x1, y=pos_y1, width=45, height=30)
+            geom_max_x = []
+            geom_max_y = []
 
-        BW_list_var[count] = [None] * len(Band_list.get(i))
-        BW_Label[count] = [None] * len(Band_list.get(i))
-        # print(f"Band_list.get(i) = {Band_list.get(i)}, count = {len(Band_list.get(i))}")
+            for count, i in enumerate(Band_list[key]):
+                pos_x1 = 10
+                pos_y1 = 5 + 35 * count
+                Band_list_var[key][count] = ttkbst.Label(BW_frame[key], text=f"{rat}{i}")
+                Band_list_var[key][count].place(x=pos_x1, y=pos_y1, width=45, height=30)
 
-        for c, k in enumerate(Band_list.get(i)):
-            BW_list_var[count][c] = ttkbst.BooleanVar()
-            pos_x2 = 50 + 50 * c
-            BW_Label[count][c] = ttkbst.Checkbutton(ChildWin_bw, text=f"{k}", variable=BW_list_var[count][c])
-            BW_Label[count][c].place(x=pos_x2, y=pos_y1, width=45, height=30)
-            BW_list_var[count][c].set(True)
-            geom_max_x.append(pos_x2)
-            geom_max_y.append(pos_y1)
+                BW_list_var[key][count] = [None] * len(Band_list[key].get(i))
+                BW_Label[key][count] = [None] * len(Band_list[key].get(i))
+                # print(f"Band_list[0].get(i) = {Band_list[0].get(i)}, count = {len(Band_list[0].get(i))}")
 
-            if v == 3:
-                if (i in [38, 39, 40, 41]) & (k == 5):
-                    BW_Label[count][c].config(state=tk.DISABLED)
-                    BW_list_var[count][c].set(False)
-                elif (i in [7, 40]) & (k == 45):
-                    BW_Label[count][c].config(state=tk.DISABLED)
-                    BW_list_var[count][c].set(False)
-                elif (i in [8]) & (k in [25, 30]):
-                    BW_Label[count][c].config(state=tk.DISABLED)
-                    BW_list_var[count][c].set(False)
-                elif (i in [1, 66, 38, 39, 40]) & (k == 35):
-                    BW_Label[count][c].config(state=tk.DISABLED)
-                    BW_list_var[count][c].set(False)
-                elif (i in [77, 78]) & (k in [5, 35, 45]):
-                    BW_Label[count][c].config(state=tk.DISABLED)
-                    BW_list_var[count][c].set(False)
-                elif k in [35, 45]:
-                    BW_Label[count][c].config(state=tk.DISABLED)
-                    BW_list_var[count][c].set(False)
+                for c, k in enumerate(Band_list[key].get(i)):
+                    BW_list_var[key][count][c] = ttkbst.BooleanVar()
+                    pos_x2 = 50 + 50 * c
+                    BW_Label[key][count][c] = ttkbst.Checkbutton(
+                        BW_frame[key], text=f"{k}", variable=BW_list_var[key][count][c]
+                    )
+                    BW_Label[key][count][c].place(x=pos_x2, y=pos_y1, width=45, height=30)
+                    BW_list_var[key][count][c].set(True)
+                    geom_max_x.append(pos_x2)
+                    geom_max_y.append(pos_y1)
+
+                    if v == 3:
+                        if (i in [38, 39, 40, 41]) & (k == 5):
+                            BW_Label[key][count][c].config(state=tk.DISABLED)
+                            BW_list_var[key][count][c].set(False)
+                        elif (i in [7, 40]) & (k == 45):
+                            BW_Label[key][count][c].config(state=tk.DISABLED)
+                            BW_list_var[key][count][c].set(False)
+                        elif (i in [8]) & (k in [25, 30]):
+                            BW_Label[key][count][c].config(state=tk.DISABLED)
+                            BW_list_var[key][count][c].set(False)
+                        elif (i in [1, 66, 38, 39, 40]) & (k == 35):
+                            BW_Label[key][count][c].config(state=tk.DISABLED)
+                            BW_list_var[key][count][c].set(False)
+                        elif (i in [77, 78]) & (k in [5, 35, 45]):
+                            BW_Label[key][count][c].config(state=tk.DISABLED)
+                            BW_list_var[key][count][c].set(False)
+                        elif k in [35, 45]:
+                            BW_Label[key][count][c].config(state=tk.DISABLED)
+                            BW_list_var[key][count][c].set(False)
+
+            if key == 0:
+                x_max[0] = max(geom_max_x) + 50
+                x_start[0] = key * x_max[0] + key * 5 + 5
+                y_max[0] = max(geom_max_y) + 60
+                BW_frame[key].place(x=x_start[0], y=5, width=x_max[0], height=y_max[0])
+            elif key == 1:
+                x_max[1] = max(geom_max_x) + 50
+                x_start[1] = key * x_max[0] + key * 5 + 5
+                y_max[1] = max(geom_max_y) + 60
+                BW_frame[key].place(x=x_start[1], y=5, width=x_max[1], height=y_max[1])
+        else:
+            if key == 0:
+                y_max[0] = 0
+            elif key == 1:
+                y_max[1] = 0
+
+    max_x = max(x_max)
+    max_y = max(y_max)
+    StartX = max(x_start)
 
     if v == 1:
-        Btn_all_x = max(geom_max_x) - 40
-        Btn_all_y = max(geom_max_y) + 40
-        Btn_ok_x = max(geom_max_x) + 15
-        Btn_ok_y = max(geom_max_y) + 40
-
-        win_width = max(geom_max_x) + 55
-        win_height = max(geom_max_y) + 80
-        ChildWin_bw.geometry(f"{win_width}x{win_height}")
-
+        if y_max[1] == 0:
+            win_width = x_max[0]
+            win_height = max_y + 10
+            Btn_all_x = 5
+            Btn_all_y = win_height
+            Btn_ok_x = 5 + x_max[0] - 45
+            Btn_ok_y = win_height
+            win_height = win_height + 35
+            BW_frame[0].place(x=5, y=5, width=x_max[0], height=y_max[0])
+            ChildWin_bw.geometry(f"{win_width}x{win_height}")
+        elif y_max[0] == 0:
+            win_width = x_max[1]
+            win_height = max_y + 10
+            Btn_all_x = 5
+            Btn_all_y = win_height
+            Btn_ok_x = 5 + x_max[1] - 45
+            Btn_ok_y = win_height
+            win_height = win_height + 35
+            BW_frame[1].place(x=5, y=5, width=x_max[1], height=y_max[1])
+            ChildWin_bw.geometry(f"{win_width}x{win_height}")
+        else:
+            win_width = StartX + max_x + 5
+            win_height = max_y + 10
+            if y_max[0] > y_max[1]:
+                Btn_all_x = x_start[1]
+                Btn_all_y = win_height - 35
+                Btn_ok_x = x_start[1] + x_max[1] - 45
+                Btn_ok_y = win_height - 35
+            elif y_max[0] < y_max[1]:
+                Btn_all_x = 5
+                Btn_all_y = win_height - 35
+                Btn_ok_x = 5 + x_max[0] - 45
+                Btn_ok_y = win_height - 35
+            elif y_max[0] == y_max[1]:
+                Btn_all_x = x_start[1]
+                Btn_all_y = win_height
+                Btn_ok_x = x_start[1] + x_max[1] - 45
+                Btn_ok_y = win_height
+                win_height = win_height + 35
+            ChildWin_bw.geometry(f"{win_width}x{win_height}")
     elif v == 2 or v == 3:
-        BW = longest_value(Band_list)
+        for key in Band_list:
+            if Band_list[key]:
+                BW = longest_value(Band_list[key])
+
         Btn_BW = [None] * len(BW)
         bw_var = ttkbst.IntVar()
 
-        for counter, i in enumerate(BW):
-            Btn_BW[counter] = ttkbst.Radiobutton(
-                ChildWin_bw,
-                text=i,
-                value=i,
-                variable=bw_var,
-                command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
-            )
-            ps_x = max(geom_max_x) - (50 * (len(BW) - 1 - counter))
-            ps_y = pos_y1 + 35
-            Btn_BW[counter].place(x=ps_x, y=ps_y, width=45, height=30)
+        win_width = StartX + x_max[1] + 5
+        win_height = max_y + 10
 
-        Btn_clr_x = max(geom_max_x) - 115
-        Btn_clr_y = max(geom_max_y) + 70
-        Btn_all_x = max(geom_max_x) - 50
-        Btn_all_y = max(geom_max_y) + 70
-        Btn_ok_x = max(geom_max_x)
-        Btn_ok_y = max(geom_max_y) + 70
+        if y_max[1] == 0:
+            for counter, i in enumerate(BW):
+                Btn_BW[counter] = ttkbst.Radiobutton(
+                    ChildWin_bw,
+                    text=i,
+                    value=i,
+                    variable=bw_var,
+                    command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
+                )
+                ps_x = (x_start[0] + x_max[0] - 50) - (50 * (len(BW) - 1 - counter))
+                ps_y = y_max[0] + 10
+                Btn_BW[counter].place(x=ps_x, y=ps_y, width=50, height=30)
+            Btn_ok_x = 5 + x_max[0] - 45
+            Btn_all_x = Btn_ok_x - 70
+            Btn_clr_x = Btn_all_x - 85
+            win_width = x_max[0] + 10
+            win_height = y_max[0] + 80
+            BW_frame[0].place(x=5, y=5, width=x_max[0], height=y_max[0])
+        elif y_max[0] == 0:
+            for counter, i in enumerate(BW):
+                Btn_BW[counter] = ttkbst.Radiobutton(
+                    ChildWin_bw,
+                    text=i,
+                    value=i,
+                    variable=bw_var,
+                    command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
+                )
+                ps_x = (x_start[1] + x_max[1] - 55) - (50 * (len(BW) - 1 - counter))
+                ps_y = y_max[1] + 10
+                Btn_BW[counter].place(x=ps_x, y=ps_y, width=50, height=30)
+            Btn_ok_x = 5 + x_max[1] - 45
+            Btn_all_x = Btn_ok_x - 70
+            Btn_clr_x = Btn_all_x - 85
+            win_width = x_max[1] + 10
+            win_height = y_max[1] + 80
+            BW_frame[1].place(x=5, y=5, width=x_max[1], height=y_max[1])
+        else:
+            if y_max[0] > y_max[1]:
+                for counter, i in enumerate(BW):
+                    Btn_BW[counter] = ttkbst.Radiobutton(
+                        ChildWin_bw,
+                        text=i,
+                        value=i,
+                        variable=bw_var,
+                        command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
+                    )
+                    ps_x = (StartX + max_x - 50) - (50 * (len(BW) - 1 - counter))
+                    if (y_max[0] - y_max[1] < 85) & (y_max[0] - y_max[1] > 45):
+                        ps_y = y_max[1] + 10
+                        win_height = max_y + 10
+                    elif y_max[0] - y_max[1] < 85:
+                        ps_y = y_max[1] + 10
+                        win_height = max_y + 50
+                    else:
+                        ps_y = max_y - 65
+                    Btn_BW[counter].place(x=ps_x, y=ps_y, width=50, height=30)
+                Btn_ok_x = StartX + max_x - 45
+                Btn_all_x = Btn_ok_x - 70
+                Btn_clr_x = Btn_all_x - 85
+            elif y_max[0] < y_max[1]:
+                for counter, i in enumerate(BW):
+                    Btn_BW[counter] = ttkbst.Radiobutton(
+                        ChildWin_bw,
+                        text=i,
+                        value=i,
+                        variable=bw_var,
+                        command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
+                    )
+                    ps_x = (StartX - 55) - (50 * (len(BW) - 1 - counter))
+                    if (y_max[1] - y_max[0] < 85) & (y_max[1] - y_max[0] > 45):
+                        ps_y = y_max[0] + 10
+                        win_height = max_y + 10
+                    elif y_max[1] - y_max[0] < 85:
+                        ps_y = y_max[0] + 10
+                        win_height = max_y + 50
+                    else:
+                        ps_y = max_y - 65
+                    Btn_BW[counter].place(x=ps_x, y=ps_y, width=50, height=30)
+                Btn_ok_x = StartX - 50
+                Btn_all_x = Btn_ok_x - 70
+                Btn_clr_x = Btn_all_x - 85
+            elif y_max[0] == y_max[1]:
+                for counter, i in enumerate(BW):
+                    Btn_BW[counter] = ttkbst.Radiobutton(
+                        ChildWin_bw,
+                        text=i,
+                        value=i,
+                        variable=bw_var,
+                        command=lambda: BW_check(bw_var.get(), Band_list, BW_Label, BW_list_var),
+                    )
+                    ps_x = (StartX + max_x - 50) - (50 * (len(BW) - 1 - counter))
+                    ps_y = max_y + 10
+                    Btn_BW[counter].place(x=ps_x, y=ps_y, width=50, height=30)
+                Btn_ok_x = StartX + max_x - 45
+                Btn_all_x = Btn_ok_x - 70
+                Btn_clr_x = Btn_all_x - 85
+                win_height = max_y + 85
 
+        Btn_ok_y = ps_y + 35
+        Btn_all_y = ps_y + 35
+        Btn_clr_y = ps_y + 35
         Btn_clr = ttkbst.Button(ChildWin_bw, text="Clear", bootstyle="info")
         Btn_clr.place(x=Btn_clr_x, y=Btn_clr_y, width=60, height=30)
         Btn_clr.config(command=lambda: BW_clear(Band_list, BW_list_var))
 
-        win_width = max(geom_max_x) + 55
-        win_height = max(geom_max_y) + 110
         ChildWin_bw.geometry(f"{win_width}x{win_height}")
 
     Btn_all = ttkbst.Button(ChildWin_bw, text="All", bootstyle="info")
@@ -837,64 +1107,66 @@ def BW_setting(v, Band_index, Band_Select_Main_var, BW_list):
     x = int((scr_width - win_width) / 2)
     y = int((scr_height - win_height) / 2)
     ChildWin_bw.geometry(f"{win_width}x{win_height}+{x}+{y}")
+    ChildWin_bw.resizable(False, False)
 
     return BW_list
 
 
 def BW_check(bw_var, Band_list, BW_Label, BW_list_var):
-    chk = []
-    state = [None] * len(Band_list)
-    for i, j in enumerate(Band_list):
-        state[i] = [None] * len(Band_list.get(j))
+    for key in Band_list:
+        chk = []
+        state = [None] * len(Band_list[key])
+        for i, j in enumerate(Band_list[key]):
+            state[i] = [None] * len(Band_list[key].get(j))
 
-        for k, l in enumerate(Band_list.get(j)):
-            state[i][k] = str(BW_Label[i][k].cget("state")).strip()  # normal or disabled
-            if state[i][k] == "disabled":
-                chk.append(True)
-            else:
-                chk.append(BW_list_var[i][k].get())  # True or False
-    # DISABLED 이면 Skip 하도록 구현
-    match bw_var:
-        case 0:  # all button
-            for m, n in enumerate(Band_list):
-                for o, p in enumerate(Band_list.get(n)):
-                    if state[m][o] == "disabled":
-                        pass
-                    else:
-                        if all(chk):  # all() : None in list -> False, None in 2D list -> True
-                            BW_list_var[m][o].set(False)
+            for k, l in enumerate(Band_list[key].get(j)):
+                state[i][k] = str(BW_Label[key][i][k].cget("state")).strip()  # normal or disabled
+                if state[i][k] == "disabled":
+                    chk.append(True)
+                else:
+                    chk.append(BW_list_var[key][i][k].get())  # True or False
+        # DISABLED 이면 Skip 하도록 구현
+        match bw_var:
+            case 0:  # all button
+                for m, n in enumerate(Band_list[key]):
+                    for o, p in enumerate(Band_list[key].get(n)):
+                        if state[m][o] == "disabled":
+                            pass
                         else:
-                            BW_list_var[m][o].set(True)
-        case 5:
-            Specific_BW_selection(Band_list, 0, state, chk, BW_list_var)
-        case 10:
-            Specific_BW_selection(Band_list, 1, state, chk, BW_list_var)
-        case 15:
-            Specific_BW_selection(Band_list, 2, state, chk, BW_list_var)
-        case 20:
-            Specific_BW_selection(Band_list, 3, state, chk, BW_list_var)
-        case 25:
-            Specific_BW_selection(Band_list, 4, state, chk, BW_list_var)
-        case 30:
-            Specific_BW_selection(Band_list, 5, state, chk, BW_list_var)
-        case 35:
-            Specific_BW_selection(Band_list, 6, state, chk, BW_list_var)
-        case 40:
-            Specific_BW_selection(Band_list, 7, state, chk, BW_list_var)
-        case 45:
-            Specific_BW_selection(Band_list, 8, state, chk, BW_list_var)
-        case 50:
-            Specific_BW_selection(Band_list, 9, state, chk, BW_list_var)
-        case 60:
-            Specific_BW_selection(Band_list, 10, state, chk, BW_list_var)
-        case 70:
-            Specific_BW_selection(Band_list, 11, state, chk, BW_list_var)
-        case 80:
-            Specific_BW_selection(Band_list, 12, state, chk, BW_list_var)
-        case 90:
-            Specific_BW_selection(Band_list, 13, state, chk, BW_list_var)
-        case 100:
-            Specific_BW_selection(Band_list, 14, state, chk, BW_list_var)
+                            if all(chk):  # all() : None in list -> False, None in 2D list -> True
+                                BW_list_var[key][m][o].set(False)
+                            else:
+                                BW_list_var[key][m][o].set(True)
+            case 5:
+                Specific_BW_selection(Band_list[key], 0, state, chk, BW_list_var[key])
+            case 10:
+                Specific_BW_selection(Band_list[key], 1, state, chk, BW_list_var[key])
+            case 15:
+                Specific_BW_selection(Band_list[key], 2, state, chk, BW_list_var[key])
+            case 20:
+                Specific_BW_selection(Band_list[key], 3, state, chk, BW_list_var[key])
+            case 25:
+                Specific_BW_selection(Band_list[key], 4, state, chk, BW_list_var[key])
+            case 30:
+                Specific_BW_selection(Band_list[key], 5, state, chk, BW_list_var[key])
+            case 35:
+                Specific_BW_selection(Band_list[key], 6, state, chk, BW_list_var[key])
+            case 40:
+                Specific_BW_selection(Band_list[key], 7, state, chk, BW_list_var[key])
+            case 45:
+                Specific_BW_selection(Band_list[key], 8, state, chk, BW_list_var[key])
+            case 50:
+                Specific_BW_selection(Band_list[key], 9, state, chk, BW_list_var[key])
+            case 60:
+                Specific_BW_selection(Band_list[key], 10, state, chk, BW_list_var[key])
+            case 70:
+                Specific_BW_selection(Band_list[key], 11, state, chk, BW_list_var[key])
+            case 80:
+                Specific_BW_selection(Band_list[key], 12, state, chk, BW_list_var[key])
+            case 90:
+                Specific_BW_selection(Band_list[key], 13, state, chk, BW_list_var[key])
+            case 100:
+                Specific_BW_selection(Band_list[key], 14, state, chk, BW_list_var[key])
 
 
 def Specific_BW_selection(Band_list, BW_number, state, chk, BW_list_var):
@@ -916,25 +1188,31 @@ def Specific_BW_selection(Band_list, BW_number, state, chk, BW_list_var):
 
 
 def BW_clear(Band_list, BW_list_var):
-    for m, n in enumerate(Band_list):
-        for o, p in enumerate(Band_list.get(n)):
-            BW_list_var[m][o].set(False)
+    for key in Band_list:
+        for m, n in enumerate(Band_list[key]):
+            for o, p in enumerate(Band_list[key].get(n)):
+                BW_list_var[key][m][o].set(False)
 
 
 def BW_setting_ok(Band_list, BW_list_var):
-    bwlist = [None] * len(BW_list_var)
-    for count, band in enumerate(BW_list_var):
-        bwlist[count] = []
-        for bw in band:
-            if bw == None:
-                bwlist[count].append(False)
-            else:
-                bwlist[count].append(bw.get())
-    Check_list = {
-        key: [value[i] for i in range(len(value)) if bwlist[counter][i]]
-        for counter, (key, value) in enumerate(Band_list.items())
-    }
-    Checked_BW_list = dict([(k, v) for k, v in Check_list.items() if v != []])
+    Check_list = {}
+    Checked_BW_list = {}
+
+    for key in BW_list_var:
+        bwlist = [None] * len(BW_list_var[key])
+        for count, band in enumerate(BW_list_var[key]):
+            bwlist[count] = []
+            for bw in band:
+                if bw == None:
+                    bwlist[count].append(False)
+                else:
+                    bwlist[count].append(bw.get())
+        Check_list[key] = {
+            key: [value[i] for i in range(len(value)) if bwlist[counter][i]]
+            for counter, (key, value) in enumerate(Band_list[key].items())
+        }
+        Checked_BW_list[key] = dict([(k, v) for k, v in Check_list[key].items() if v != []])
+
     ChildWin_bw.destroy()
 
     return Checked_BW_list

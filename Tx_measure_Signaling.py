@@ -16,7 +16,7 @@ def Callbox_reset(Selected_path, Equip, Callbox, text_area):
     func.Check_OPC(Callbox)
     Callbox.write("SYST:PRES:ALL")
     func.Check_OPC(Callbox)
-    func.loss_table(Selected_path, Equip, Callbox)
+    func.loss_table(Selected_path, "Loss_table_Main", Equip, Callbox)
 
 
 def Call_connection(Callbox, dut, text_area):
@@ -45,6 +45,9 @@ def Call_connection(Callbox, dut, text_area):
         text_area.see(tk.END)
         if sec == 50:
             response = dut.at_write("AT+MODECHAN=0,2")
+            response = dut.at_write("AT+DISPTEST=0,3")
+            text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
+            text_area.see(tk.END)
             response = dut.at_write("AT+AIRPMODE=0,0,0,1")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
@@ -56,6 +59,9 @@ def Call_connection(Callbox, dut, text_area):
 
     Callbox.write("CALL:LTE:SIGN:PSW:ACT CONN")
     time.sleep(3)
+    response = dut.at_write("AT+MODECHAN=0,2")
+    response = dut.at_write("AT+DISPTEST=0,3")
+    response = dut.at_write("AT+MODECHAN=0,0")
     func.Check_OPC(Callbox)
     text_area.insert(tk.END, f"\n")
 
@@ -321,8 +327,10 @@ def Pwr_setting(Callbox, PwrL, text_area):
 def Power_loop(
     dut,
     Callbox,
-    band,
+    path,
+    Testband,
     channel,
+    bandwidth,
     pwr_levels,
     E3632a_1,
     E3632a_2,
@@ -333,8 +341,6 @@ def Power_loop(
     ax3,
     save_dir,
     text_area,
-    band_tx_result,
-    one_channel_tx_result,
 ):
     response = dut.at_write("AT+MODECHAN=0,2")
     response = dut.at_write("AT+DISPTEST=0,4")
@@ -344,12 +350,27 @@ def Power_loop(
     list_Pa_current = []
     list_ACLR_L = []
     list_ACLR_R = []
+    columns = [
+        "TX POWER",
+        "UTRA ACLR2-",
+        "UTRA ACLR1-",
+        "EUTRA ACLR-",
+        "EUTRA ACLR+",
+        "UTRA ACLR1+",
+        "UTRA ACLR2+",
+        "PA",
+        "SYSTEM",
+        "Total",
+    ]
+    tx_result = pd.DataFrame("", index=pwr_levels, columns=columns)
+    tx_result.columns.name = "Target"
 
     text_area.insert(
         tk.END,
         f"   TARGET  |   POWER   |   UTRA2   |   UTRA1   |  E-UTRA1  |  E-UTRA1  |   UTRA1   |   UTRA2   | "
         f" P.AMP  |  SYSTEM  \n",
     )
+    text_area.see(tk.END)
 
     for PwrL in pwr_levels:
         Retry_count = 1
@@ -391,7 +412,7 @@ def Power_loop(
                     tk.END,
                     f"    {PwrL:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
                     f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-                    f" {Pa_current:^5d}  |   {Sy_current:^5d}  \n",
+                    f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
                 )
                 text_area.see(tk.END)
                 text_area.insert(tk.END, "-" * 116)
@@ -446,11 +467,11 @@ def Power_loop(
             tk.END,
             f"    {PwrL:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
             f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-            f" {Pa_current:>5d}  |   {Sy_current:>5d}  \n",
+            f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
         )
         text_area.see(tk.END)
 
-        one_channel_tx_result.loc[PwrL, :] = [
+        tx_result.loc[PwrL, :] = [
             TX_power,
             Lutra2,
             Lutra1,
@@ -475,22 +496,38 @@ def Power_loop(
             list_Pa_current.append(Pa_current)
 
         func.update_plot(
-            canvas, fig, ax1, ax2, ax3, "LTE", band, channel, list_Power, Power_delta, list_Pa_current, list_ACLR_max
+            canvas,
+            fig,
+            ax1,
+            ax2,
+            ax3,
+            "LTE",
+            path,
+            Testband,
+            channel,
+            bandwidth,
+            list_Power,
+            Power_delta,
+            list_Pa_current,
+            list_ACLR_max,
         )
     str_time = datetime.now().strftime("%y%m%d_%H%M%S_")
-    fig.savefig(save_dir + str_time + f"Signaling_LTE_B{band}_{channel}CH" + ".png", dpi=300)
-    band_tx_result.append(one_channel_tx_result)
+    fig.savefig(save_dir + str_time + f"Signaling_LTE_B{Testband}_{channel}CH {bandwidth}MHz" + ".png", dpi=300)
 
-    return band_tx_result
+    return tx_result
 
 
-def Signaling_test(
+def LTE_Signaling_test(
     dut,
     Equip,
     Callbox,
     E3632a_1,
     E3632a_2,
-    Band_list,
+    Main_loss,
+    Sub_loss,
+    rat,
+    Test_band_ch_list,
+    BW_list,
     pwr_levels,
     canvas,
     fig,
@@ -512,70 +549,87 @@ def Signaling_test(
 
     Nonsig.Set_factolog(dut, text_area)
 
-    for band in Band_list:
-        band_tx_result = []
-        channel_list = Band_list[band]
-        Status = Callbox.query("FETC:LTE:SIGN:PSW:STAT?").strip("\n")
+    for key in Test_band_ch_list:
+        if key == 0:
+            path = "Main"
+            path_number = 0
+            func.loss_table(Main_loss, "Loss_table_Main", Equip, Callbox)
 
-        if Status != "CEST":
-            if band in [38, 39, 40, 41]:
-                Tdd_initialize(Callbox, 38, 38000, text_area)
-                stat = Call_connection(Callbox, dut, text_area)
-                time.sleep(3)
-                Tdd_measure_setting(Callbox)
-            else:
-                Fdd_initialize(Callbox, 1, 300, text_area)
-                stat = Call_connection(Callbox, dut, text_area)
-                time.sleep(3)
-                Fdd_measure_setting(Callbox)
+        elif key == 1:
+            path = "Sub"
+            path_number = 1
+            func.loss_table(Sub_loss, "Loss_table_Sub", Equip, Callbox)
 
-        for channel in channel_list:
-            columns = [
-                "TX POWER",
-                "UTRA ACLR2-",
-                "UTRA ACLR1-",
-                "EUTRA ACLR-",
-                "EUTRA ACLR+",
-                "UTRA ACLR1+",
-                "UTRA ACLR2+",
-                "PA",
-                "SYSTEM",
-                "Total",
-            ]
-            one_channel_tx_result = pd.DataFrame("", index=pwr_levels, columns=columns)
-            one_channel_tx_result.columns.name = "Target"
-            Connected_CH = int(Callbox.query("CONFigure:LTE:SIGN:RFS:PCC:CHAN:DL?"))
+        for Testband in Test_band_ch_list[key]:
+            channel_list = Test_band_ch_list[key][Testband]
+            bandwidth_list = BW_list[key][Testband]
+            Status = Callbox.query("FETC:LTE:SIGN:PSW:STAT?").strip("\n")
+            band_tx_result = []
+            ch_tx_result = []
+            if Status != "CEST":
+                if Testband in [38, 39, 40, 41]:
+                    Tdd_initialize(Callbox, 38, 38000, text_area)
+                    stat = Call_connection(Callbox, dut, text_area)
+                    time.sleep(3)
+                    Tdd_measure_setting(Callbox)
+                else:
+                    Fdd_initialize(Callbox, 1, 300, text_area)
+                    stat = Call_connection(Callbox, dut, text_area)
+                    time.sleep(3)
+                    Fdd_measure_setting(Callbox)
 
-            if channel != Connected_CH:
-                Connected_CH = Handover(Callbox, dut, band, channel, text_area)
+            for channel in channel_list:
+                bandwidth_tx_result = []
 
-            text_area.insert(tk.END, "\n")
-            text_area.insert(tk.END, "*" * 50)
-            text_area.insert(tk.END, f" BAND{band:<2} {Connected_CH:>5} CH ")
-            text_area.insert(tk.END, "*" * 49)
-            text_area.insert(tk.END, "\n")
+                for bandwidth in bandwidth_list:
+                    Connected_CH = int(Callbox.query("CONFigure:LTE:SIGN:RFS:PCC:CHAN:DL?"))
 
-            band_tx_result = Power_loop(
-                dut,
-                Callbox,
-                band,
-                channel,
-                pwr_levels,
-                E3632a_1,
-                E3632a_2,
-                canvas,
-                fig,
-                ax1,
-                ax2,
-                ax3,
-                save_dir,
-                text_area,
+                    if channel != Connected_CH:
+                        Connected_CH = Handover(Callbox, dut, Testband, channel, text_area)
+
+                    text_area.insert(tk.END, "\n")
+                    text_area.insert(tk.END, "*" * 44)
+                    text_area.insert(tk.END, f" {rat} B{Testband:<2} {path} {Connected_CH:>5}CH {bandwidth:>2d}MHz ")
+                    text_area.insert(tk.END, "*" * 44)
+                    text_area.insert(tk.END, "\n")
+                    text_area.see(tk.END)
+
+                    tx_result = Power_loop(
+                        dut,
+                        Callbox,
+                        path,
+                        Testband,
+                        channel,
+                        bandwidth,
+                        pwr_levels,
+                        E3632a_1,
+                        E3632a_2,
+                        canvas,
+                        fig,
+                        ax1,
+                        ax2,
+                        ax3,
+                        save_dir,
+                        text_area,
+                    )
+                    bandwidth_tx_result.append(tx_result)
+
+                ch_tx_result = pd.concat(
+                    bandwidth_tx_result,
+                    axis=0,
+                    keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                    names=[f"LTE B{Testband} {path} {channel}CH"],
+                )
+                band_tx_result.append(ch_tx_result)
+
+            Total_tx_result = pd.concat(
                 band_tx_result,
-                one_channel_tx_result,
+                axis=1,
+                keys=[str(ch) + " CH" for ch in channel_list],
+                names=[f"LTE B{Testband} {path}"],
             )
 
-        band_tx_result = pd.concat(band_tx_result, axis=1, keys=channel_list, names=[f"LTE Band{band}"])
+            func.resut_to_excel(Total_tx_result, filename, f"LTE B{Testband} {path}")
+            func.WB_Format(filename, 1, 1, 0)
 
-        func.resut_to_excel(band_tx_result, filename)
-        func.WB_Format(filename, 4, 2, 0)
     func.images2PdfFile(save_dir, filename)

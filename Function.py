@@ -248,7 +248,8 @@ def Power_on(combo2, combo3, combo4, text_area):
 
 
 def Start(
-    log_path,
+    Main_loss_path,
+    Sub_loss_path,
     combo1,
     combo2,
     combo3,
@@ -272,7 +273,8 @@ def Start(
 ):
 
     # try:
-    Selected_path = log_path.get()
+    Main_loss = Main_loss_path.get()
+    Sub_loss = Sub_loss_path.get()
     text_area.delete("1.0", tk.END)
     Run_mode = Run_mode_var.get()
     Equip = combo1.get()
@@ -295,12 +297,6 @@ def Start(
         )
     text_area.see(tk.END)
 
-    # Test code
-    Test_band_ch_list = Check_testband(
-        Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_Main_var, Band_Select_Sub_var
-    )
-    pwr_levels = Check_pwr_lvs(Pw_option_var)
-
     if Equip == "":
         msgbox.showwarning("Warning", "Check Call Box")
         return
@@ -312,6 +308,9 @@ def Start(
         return
     elif Comport == "":
         msgbox.showwarning("Warning", "Check Comport")
+        return
+    elif (C_Box == "CMW500") & (Rat_option_var.get() == 3):
+        msgbox.showwarning("Warning", "Choose CMW100")
         return
 
     rm = visa.ResourceManager()
@@ -326,12 +325,12 @@ def Start(
     )
     text_area.see(tk.END)
     # Callbox reset 시 losstable setting 진행
-    Sig.Callbox_reset(Selected_path, Equip, Callbox, text_area)
+    Sig.Callbox_reset(Main_loss, Equip, Callbox, text_area)
 
     Test_band_ch_list = Check_testband(
         Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_Main_var, Band_Select_Sub_var
     )
-    pwr_levels = Check_pwr_lvs(Pw_option_var)
+    pwr_levels = Check_pwr_lvs(Pw_option_var.get())
 
     today = datetime.today().strftime("%Y_%m_%d")
     start_T = datetime.today().strftime("%Y%m%d_%H%M")
@@ -352,12 +351,15 @@ def Start(
     elif Run_mode == 1:
         filename = save_dir + f"LTE_Current_{C_Box}_{start_T}.xlsx"
 
-        Sig.Signaling_test(
+        Sig.LTE_Signaling_test(
             dut,
             Equip,
             Callbox,
             E3632a_1,
             E3632a_2,
+            Main_loss,
+            Sub_loss,
+            "LTE",
             Test_band_ch_list,
             BW_list,
             pwr_levels,
@@ -373,56 +375,67 @@ def Start(
 
     # Non-Singaling test
     elif Run_mode == 2:
-        loss_table(Selected_path, Equip, Callbox)
 
-        if Rat_option_var.get() == 2:
+        if Rat_option_var.get() == 2:  # LTE
             filename = save_dir + f"LTE_NonSig_{C_Box}_{start_T}.xlsx"
             Callbox.write("SYST:DISP:UPD ON")
             Nonsig.Set_factolog(dut, text_area)
 
-            for Testband in Test_band_ch_list:
-                channel_list = Test_band_ch_list[Testband]
-                bandwidth_list = BW_list[Testband]
-                band_tx_result = []
-                ch_tx_result = []
-                for channel in channel_list:
-                    bandwidth_tx_result = []
-                    for bandwidth in bandwidth_list:
-                        tx_result = Nonsig.LTE_tx_measure(
-                            dut,
-                            Equip,
-                            Callbox,
-                            E3632a_1,
-                            E3632a_2,
-                            Testband,
-                            channel,
-                            bandwidth,
-                            pwr_levels,
-                            canvas,
-                            fig,
-                            ax1,
-                            ax2,
-                            ax3,
-                            save_dir,
-                            text_area,
+            for key in Test_band_ch_list:
+                if key == 0:
+                    path = "Main"
+                    loss_table(Main_loss, "Loss_table_Main", Equip, Callbox)
+                elif key == 1:
+                    path = "Sub"
+                    loss_table(Sub_loss, "Loss_table_Sub", Equip, Callbox)
+
+                for Testband in Test_band_ch_list[key]:
+                    channel_list = Test_band_ch_list[key][Testband]
+                    bandwidth_list = BW_list[key][Testband]
+                    band_tx_result = []
+                    ch_tx_result = []
+                    for channel in channel_list:
+                        bandwidth_tx_result = []
+                        for bandwidth in bandwidth_list:
+                            tx_result = Nonsig.LTE_tx_measure(
+                                dut,
+                                Equip,
+                                Callbox,
+                                E3632a_1,
+                                E3632a_2,
+                                path,
+                                Testband,
+                                channel,
+                                bandwidth,
+                                pwr_levels,
+                                canvas,
+                                fig,
+                                ax1,
+                                ax2,
+                                ax3,
+                                save_dir,
+                                text_area,
+                            )
+                            Nonsig.End_testmode(dut, text_area)
+                            bandwidth_tx_result.append(tx_result)
+
+                        ch_tx_result = pd.concat(
+                            bandwidth_tx_result,
+                            axis=0,
+                            keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                            names=[f"LTE {path} B{Testband} {channel}CH"],
                         )
-                        Nonsig.End_testmode(dut, text_area)
-                        bandwidth_tx_result.append(tx_result)
+                        band_tx_result.append(ch_tx_result)
 
-                    ch_tx_result = pd.concat(
-                        bandwidth_tx_result,
-                        axis=0,
-                        keys=[str(bw) + " MHz" for bw in bandwidth_list],
-                        names=[f"LTE B{Testband} {channel}CH"],
+                    Total_tx_result = pd.concat(
+                        band_tx_result,
+                        axis=1,
+                        keys=[str(ch) + " CH" for ch in channel_list],
+                        names=[f"LTE {path} B{Testband}"],
                     )
-                    band_tx_result.append(ch_tx_result)
 
-                Total_tx_result = pd.concat(
-                    band_tx_result, axis=1, keys=[str(ch) + " CH" for ch in channel_list], names=[f"LTE B{Testband}"]
-                )
-
-                resut_to_excel(Total_tx_result, filename, f"LTE B{Testband}")
-                WB_Format(filename, 1, 1, 0)
+                    resut_to_excel(Total_tx_result, filename, f"LTE {path} B{Testband}")
+                    WB_Format(filename, 1, 1, 0)
 
             images2PdfFile(save_dir, filename)
 
@@ -431,88 +444,116 @@ def Start(
             Callbox.write("SYST:DISP:UPD ON")
             Nonsig.Set_factolog(dut, text_area)
 
-            for Testband in Test_band_ch_list:
-                channel_list = Test_band_ch_list[Testband]
-                bandwidth_list = BW_list[Testband]
-                band_tx_result = []
-                ch_tx_result = []
-                for channel in channel_list:
-                    bandwidth_tx_result = []
-                    for bandwidth in bandwidth_list:
-                        tx_result = Nonsig.NR_tx_measure(
-                            dut,
-                            Equip,
-                            Callbox,
-                            E3632a_1,
-                            E3632a_2,
-                            Testband,
-                            channel,
-                            bandwidth,
-                            pwr_levels,
-                            canvas,
-                            fig,
-                            ax1,
-                            ax2,
-                            ax3,
-                            save_dir,
-                            text_area,
+            for key in Test_band_ch_list:
+                if key == 0:
+                    path = "Main"
+                    loss_table(Main_loss, "Loss_table_Main", Equip, Callbox)
+                elif key == 1:
+                    path = "Sub"
+                    loss_table(Sub_loss, "Loss_table_Sub", Equip, Callbox)
+
+                for Testband in Test_band_ch_list[key]:
+                    channel_list = Test_band_ch_list[key][Testband]
+                    bandwidth_list = BW_list[key][Testband]
+                    band_tx_result = []
+                    ch_tx_result = []
+                    for channel in channel_list:
+                        bandwidth_tx_result = []
+                        for bandwidth in bandwidth_list:
+                            tx_result = Nonsig.NR_tx_measure(
+                                dut,
+                                Equip,
+                                Callbox,
+                                E3632a_1,
+                                E3632a_2,
+                                path,
+                                Testband,
+                                channel,
+                                bandwidth,
+                                pwr_levels,
+                                canvas,
+                                fig,
+                                ax1,
+                                ax2,
+                                ax3,
+                                save_dir,
+                                text_area,
+                            )
+                            Nonsig.End_testmode(dut, text_area)
+                            bandwidth_tx_result.append(tx_result)
+
+                        ch_tx_result = pd.concat(
+                            bandwidth_tx_result,
+                            axis=0,
+                            keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                            names=[f"NR n{Testband} {channel}CH"],
                         )
-                        Nonsig.End_testmode(dut, text_area)
-                        bandwidth_tx_result.append(tx_result)
+                        band_tx_result.append(ch_tx_result)
 
-                    ch_tx_result = pd.concat(
-                        bandwidth_tx_result,
-                        axis=0,
-                        keys=[str(bw) + " MHz" for bw in bandwidth_list],
-                        names=[f"NR n{Testband} {channel}CH"],
+                    Total_tx_result = pd.concat(
+                        band_tx_result,
+                        axis=1,
+                        keys=[str(ch) + " CH" for ch in channel_list],
+                        names=[f"NR n{Testband}"],
                     )
-                    band_tx_result.append(ch_tx_result)
-
-                Total_tx_result = pd.concat(
-                    band_tx_result, axis=1, keys=[str(ch) + " CH" for ch in channel_list], names=[f"NR n{Testband}"]
-                )
-                resut_to_excel(Total_tx_result, filename, f"NR n{Testband}")
-                WB_Format(filename, 1, 1, 0)
+                    resut_to_excel(Total_tx_result, filename, f"NR {path} n{Testband}")
+                    WB_Format(filename, 1, 1, 0)
 
             images2PdfFile(save_dir, filename)
 
     # APT Tuning
     elif Run_mode == 3:
-        loss_table(Selected_path, Equip, Callbox)
+        loss_table(Main_loss, "Loss_table_Main", Equip, Callbox)
         filename = save_dir + f"NR_APT_Tuning_{C_Box}_{start_T}.xlsx"
         Callbox.write("SYST:DISP:UPD ON")
 
         Nonsig.Set_factolog(dut, text_area)
 
-        for Testband in Test_band_ch_list:
+        for Testband in Test_band_ch_list[key]:
+            channel_list = Test_band_ch_list[key][Testband]
+            bandwidth_list = BW_list[key][Testband]
             band_tx_result = []
-            channel_list = Test_band_ch_list[Testband]
+            ch_tx_result = []
 
             for channel in channel_list:
-                one_channel_tx_result = Apt.NR_tx_measure(
-                    dut,
-                    Equip,
-                    Callbox,
-                    E3632a_1,
-                    E3632a_2,
-                    Testband,
-                    channel,
-                    BW_list,
-                    pwr_levels,
-                    Mipi_data,
-                    canvas,
-                    fig,
-                    ax1,
-                    ax2,
-                    ax3,
-                    save_dir,
-                    text_area,
+                bandwidth_tx_result = []
+                for bandwidth in bandwidth_list:
+
+                    tx_result = Apt.NR_tx_measure(
+                        dut,
+                        Equip,
+                        Callbox,
+                        E3632a_1,
+                        E3632a_2,
+                        Testband,
+                        channel,
+                        BW_list,
+                        pwr_levels,
+                        Mipi_data,
+                        canvas,
+                        fig,
+                        ax1,
+                        ax2,
+                        ax3,
+                        save_dir,
+                        text_area,
+                    )
+                    Nonsig.End_testmode(dut, text_area)
+                    bandwidth_tx_result.append(tx_result)
+
+                ch_tx_result = pd.concat(
+                    bandwidth_tx_result,
+                    axis=0,
+                    keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                    names=[f"NR n{Testband} {channel}CH"],
                 )
-                Nonsig.End_testmode(dut, text_area)
-
-                band_tx_result.append(one_channel_tx_result)
-
-            band_tx_result = pd.concat(band_tx_result, axis=1, keys=channel_list, names=[f"LTE Band{Testband}"])
+                band_tx_result.append(ch_tx_result)
+            Total_tx_result = pd.concat(
+                band_tx_result,
+                axis=1,
+                keys=[str(ch) + " CH" for ch in channel_list],
+                names=[f"NR n{Testband}"],
+            )
             resut_to_excel(band_tx_result, filename, f"LTE Band{Testband}")
             WB_Format(filename, 4, 2, 0)
 
@@ -538,7 +579,7 @@ def Start(
 #     msgbox.showwarning("Warning", e)
 
 
-def loss_table(Selected_path, Equip, Callbox):
+def loss_table(Selected_path, table_name, Equip, Callbox):
     with open(Selected_path, "r", encoding="utf-8") as loss_file:
         fname, ext = os.path.splitext(Selected_path)
         if ext == ".txt":
@@ -568,14 +609,14 @@ def loss_table(Selected_path, Equip, Callbox):
 
         Callbox.write(f"CONF:FDC:DEAC:ALL")
         Callbox.write(f"CONF:BASE:FDC:CTAB:DEL:ALL")
-        Callbox.write(f"CONF:BASE:FDC:CTAB:CRE 'APT_Tuning_Table1', {loss}")
+        Callbox.write(f"CONF:BASE:FDC:CTAB:CRE '{table_name}', {loss}")
         Callbox.write(
             f"CONF:CMWS:FDC:ACT:TX R118,"
-            f" 'APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1'"
+            f" '{table_name}','{table_name}','{table_name}','{table_name}','{table_name}','{table_name}','{table_name}','{table_name}'"
         )
         Callbox.write(
             f"CONF:CMWS:FDC:ACT:RX R118,"
-            f" 'APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1','APT_Tuning_Table1'"
+            f" '{table_name}','{table_name}','{table_name}','{table_name}','{table_name}','{table_name}','{table_name}','{table_name}'"
         )
 
     else:
@@ -586,8 +627,8 @@ def loss_table(Selected_path, Equip, Callbox):
         loss = return_print(*loss_list)
 
         Callbox.write(f"CONF:FDC:DEAC RF1C")
-        Callbox.write(f"CONF:BASE:FDC:CTAB:CRE 'APT_Tuning_Table1',{loss}")
-        Callbox.write(f"CONF:FDC:ACT RF1C, 'APT_Tuning_Table1', RXTX")
+        Callbox.write(f"CONF:BASE:FDC:CTAB:CRE '{table_name}',{loss}")
+        Callbox.write(f"CONF:FDC:ACT RF1C, '{table_name}', RXTX")
 
 
 def Callback_Sys_P(combo2):
@@ -736,8 +777,10 @@ def update_plot(
     ax2,
     ax3,
     rat,
-    band,
+    path,
+    Testband,
     channel,
+    bandwidth,
     list_Power,
     Power_delta,
     list_Pa_current,
@@ -751,7 +794,7 @@ def update_plot(
     ax1.clear()
     x_min, x_max = axis_min_max(list_Power)
     ax1.axis(xmin=x_min, xmax=x_max)
-    ax1.set_title(f"{rat} {band_ind}{band} {channel}CH PA Current", fontsize=8)
+    ax1.set_title(f"{rat} {band_ind}{Testband} {path} {channel}CH {bandwidth}MHz PA Current", fontsize=8)
     ax1.set_xlabel("Measured Power (dBm)", fontsize=8)
     ax1.set_ylabel("PA Current (mA)", fontsize=8)
     ax1.grid(True, color="black", alpha=0.3, linestyle="--")
@@ -769,9 +812,9 @@ def update_plot(
     x_min, x_max = axis_min_max(list_Power)
     ax2.axis(xmin=x_min, xmax=x_max)
     ax2.axis(ymin=-1, ymax=2)
-    ax2.set_title(f"{rat} {band_ind}{band} {channel}CH Power Diff. ( Measured - Target )", fontsize=8)
+    ax2.set_title(f"Power Diff. ( Measured - Target )", fontsize=8)
     ax2.set_xlabel("Measured Power (dBm)", fontsize=8)
-    ax2.set_ylabel("Power Diff (dB)", fontsize=8)
+    # ax2.set_ylabel("Power Diff (dB)", fontsize=8)
     ax2.grid(True, color="black", alpha=0.3, linestyle="--")
     ax2.plot(list_Power, Power_delta, marker="o", markersize=3, linewidth=0.7)
     fig.tight_layout()
@@ -779,9 +822,9 @@ def update_plot(
     ax3.clear()
     x_min, x_max = axis_min_max(list_Power)
     ax3.axis(xmin=x_min, xmax=x_max)
-    ax3.set_title(f"{rat} {band_ind}{band} {channel}CH ACLR", fontsize=8)
+    ax3.set_title(f"ACLR (dBc)", fontsize=8)
     ax3.set_xlabel("Measured Power (dBm)", fontsize=8)
-    ax3.set_ylabel("ACLR (dBc)", fontsize=8)
+    # ax3.set_ylabel("ACLR (dBc)", fontsize=8)
     ax3.grid(True, color="black", alpha=0.3, linestyle="--")
     ax3.plot(list_Power, list_ACLR_max, marker="o", markersize=3, linewidth=0.7)
     ax3.axhline(y=-38, linestyle="dashdot", color="red", label="Target")  # Spec 기준선 Drwaing
@@ -820,7 +863,7 @@ def images2PdfFile(save_dir, filename):
     img_files = [os.path.join(save_dir, nm) for nm in filelist]
 
     with open(f_name, "wb") as pdf_file:
-        pdf_file.write(img2pdf.convert(img_files))
+        pdf_file.write(img2pdf.convert(img_files, log_output=None))
 
     for f in img_files:
         os.remove(f)
@@ -1014,7 +1057,7 @@ def Set_limit_mask(Callbox, rat, bandwidth):
 
 
 def Nonsig_lte_tx_measure_setting(
-    dut, Callbox, Equip, band, bandwidth, BW_number, NRB, PRB, rxfreq, txfreq, text_area
+    dut, Callbox, Equip, path_number, band, bandwidth, BW_number, NRB, PRB, rxfreq, txfreq, text_area
 ):
     Equipment = Callbox.query("*IDN?").split(",")[1]
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
@@ -1050,10 +1093,14 @@ def Nonsig_lte_tx_measure_setting(
 
     elif (Equipment == "CMW") & (Equip == "GPIB0::20::INSTR"):
         if band in [38, 39, 40, 41]:
-            Callbox.write(
-                f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_Channel_CC0_RxAnt0_RF_Verification_{bandwidth}M_SIMO_01.wv'"
-            )
-            Check_OPC(Callbox)
+            if bandwidth == 10:
+                Callbox.write(
+                    f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_NodeB_Ant0_LTE_SENS_{bandwidth:02d}MHz_TDD_CFG1_SF_CFG4_SIMO_woCIF_AGL8_RC.wv'"
+                )
+                Check_OPC(Callbox)
+            else:
+                Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_NodeB_Ant0_TDD_FULL_{BW_number+1:02d}.wv'")
+                Check_OPC(Callbox)
         else:
             Callbox.write(f"SOUR:GPRF:GEN1:ARB:FILE 'D:\SMU_NodeB_Ant0_FRC_{bandwidth:02d}MHz.wv'")
             Check_OPC(Callbox)
@@ -1075,12 +1122,17 @@ def Nonsig_lte_tx_measure_setting(
         if response == "ON\n":
             break
     Ask_query(Callbox, text_area, word, word)
-
+    # RX Sync는 Main / Sub 상관없이 동작
+    # AT+LSYNC = Main, RX Path, Frequency
+    # Main : 0, Main : 0, Frequency
+    # CA#1 : 1,  4RX : 1, Frequency
+    # CA#2 : 2
+    # CA#3 : 3
     response = dut.at_write(f"AT+LSYNC=0,0,{rxfreq}")
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
 
-    response = dut.at_write(f"AT+LTXSENDREQ=0,{BW_number},{txfreq},{PRB},0,0,2,1,23")
+    response = dut.at_write(f"AT+LTXSENDREQ={path_number},{BW_number},{txfreq},{PRB},0,0,2,1,23")
 
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
@@ -1154,7 +1206,7 @@ def Nonsig_lte_tx_measure_setting(
 
 
 def Nonsig_nr_tx_measure_setting(
-    dut, Callbox, Equip, band, bandwidth, BW_number, NRB, outfull_offset, PRB, infull_offset, rxfreq, txfreq, text_area
+    dut, Callbox, Equip, path_number, Testband, bandwidth, BW_number, PRB, infull_offset, rxfreq, txfreq, text_area
 ):
     Equipment = Callbox.query("*IDN?").split(",")[1]
 
@@ -1171,7 +1223,7 @@ def Nonsig_nr_tx_measure_setting(
     Check_OPC(Callbox)
 
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
-        if band in [38, 40, 41, 77, 78]:
+        if Testband in [38, 40, 41, 77, 78]:
             Callbox.write(
                 "SOUR:GPRF:GEN1:ARB:FILE 'C:\CMW100_WV\SMU_NodeB_NR_Ant0_NR_10MHz_SCS30_TDD_Sens_MCS0_rescale.wv'"
             )
@@ -1211,11 +1263,11 @@ def Nonsig_nr_tx_measure_setting(
     #  Sub : 1, Frequency, 10M : 1, SCS 30 : 1, RBSize, RBOffset, 256Q : 8,    CP : 1, TX Level
     # MIMO : 20
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
-        if band in [38, 40, 41, 77, 78]:  # SCS 30
+        if Testband in [38, 40, 41, 77, 78]:  # SCS 30
             response = dut.at_write(f"AT+NRFSYNC=0,0,1,{BW_number},0,{rxfreq}")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
-            response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},{BW_number},1,{PRB},{infull_offset},2,0,23")
+            response = dut.at_write(f"AT+NTXSENDREQ={path_number},{txfreq},{BW_number},1,{PRB},{infull_offset},2,0,23")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
             Callbox.write("CONF:NRS:MEAS:MEV:DMODe TDD")
@@ -1225,14 +1277,14 @@ def Nonsig_nr_tx_measure_setting(
             response = dut.at_write(f"AT+NRFSYNC=0,0,0,{BW_number},0,{rxfreq}")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
-            response = dut.at_write(f"AT+NTXSENDREQ=0,{txfreq},{BW_number},0,{PRB},{infull_offset},2,0,23")
+            response = dut.at_write(f"AT+NTXSENDREQ={path_number},{txfreq},{BW_number},0,{PRB},{infull_offset},2,0,23")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
             text_area.see(tk.END)
             Callbox.write("CONF:NRS:MEAS:MEV:DMODe FDD")
             Check_OPC(Callbox)
             scs = 15
     # time.sleep(0.1)
-    Callbox.write(f"CONF:NRS:MEAS:BAND OB{band}")
+    Callbox.write(f"CONF:NRS:MEAS:BAND OB{Testband}")
     Callbox.write(f"CONF:NRS:MEAS:RFS:FREQ {txfreq}KHz")
     Check_OPC(Callbox)
     Callbox.write("CONF:NRS:MEAS:MEV:PLC 0")
@@ -1244,7 +1296,7 @@ def Nonsig_nr_tx_measure_setting(
     Callbox.write("CONFigure:NRSub:MEASurement:MEValuation:DFTPrecoding ON")
 
     if (Equipment == "CMW") & (Equip == "TCPIP0::127.0.0.1"):
-        if band in [38, 40, 41, 77, 78]:  # SCS 30
+        if Testband in [38, 40, 41, 77, 78]:  # SCS 30
             Callbox.write(
                 f"CONFigure:NRSub:MEASurement:MEValuation:PUSChconfig QPSK,A,OFF,{PRB},{infull_offset},14,0,T1,SING,0,2"
             )
