@@ -12,6 +12,9 @@ def Set_factolog(dut, text_area):
     response = dut.at_write("AT+MODECHAN=0,2")
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
+    response = dut.at_write("AT+DISPTEST=0,3")
+    text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
+    text_area.see(tk.END)
     response = dut.at_write("AT+FACTOLOG=0,2,1,2")
     text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
     text_area.see(tk.END)
@@ -100,8 +103,8 @@ def LTE_tx_measure(
     text_area.see(tk.END)
     text_area.insert(
         tk.END,
-        f"   TARGET  |   POWER   |   UTRA2   |   UTRA1   |  E-UTRA1  |  E-UTRA1  |   UTRA1   |   UTRA2  "
-        f" |  P.AMP  |  SYSTEM  \n",
+        f"   TARGET  |   POWER   |   UTRA2   |   UTRA1   |  E-UTRA1  |  E-UTRA1  |   UTRA1   |   UTRA2   |"
+        f"   P.AMP  |  SYSTEM  \n",
     )
     text_area.see(tk.END)
     text_area.insert(tk.END, "-" * 116)
@@ -152,12 +155,17 @@ def LTE_tx_measure(
         TX_power, Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2 = func.Query_aclr("LTE", Callbox)
         Sy_current, Pa_current = func.PA_Current_Measure(E3632a_1, E3632a_2)
 
-        text_area.insert(
-            tk.END,
-            f"    {pwr:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
-            f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-            f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
-        )
+        List_aclr = [Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2]
+        text_area.tag_config("red_bold", foreground="red", font=("Consolas", 9, "bold"))
+        text_area.insert(tk.END, f"    {pwr:>3}    |  {TX_power:>6.2f}   |   ")
+        for aclr in List_aclr:
+            if aclr < 38.0:
+                text_area.insert(tk.END, f"{aclr:^5.2f}", "red_bold")
+                text_area.insert(tk.END, f"   |   ")
+            else:
+                text_area.insert(tk.END, f"{aclr:^5.2f}")
+                text_area.insert(tk.END, f"   |   ")
+        text_area.insert(tk.END, f"{Pa_current:>4d}   |  {Sy_current:>4d}   \n")
         text_area.see(tk.END)
         # word = "FETC:LTE:MEAS:MEV:SEM:MARG?" # SEM 마진 생략
         # Ask_query(Callbox, text_area, word, word)
@@ -323,12 +331,17 @@ def NR_tx_measure(
         TX_power, Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2 = func.Query_aclr("NR", Callbox)
         Sy_current, Pa_current = func.PA_Current_Measure(E3632a_1, E3632a_2)
 
-        text_area.insert(
-            tk.END,
-            f"    {pwr:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
-            f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-            f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
-        )
+        List_aclr = [Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2]
+        text_area.tag_config("red_bold", foreground="red", font=("Consolas", 9, "bold"))
+        text_area.insert(tk.END, f"    {pwr:>3}    |  {TX_power:>6.2f}   |   ")
+        for aclr in List_aclr:
+            if aclr < 38.0:
+                text_area.insert(tk.END, f"{aclr:^5.2f}", "red_bold")
+                text_area.insert(tk.END, f"   |   ")
+            else:
+                text_area.insert(tk.END, f"{aclr:^5.2f}")
+                text_area.insert(tk.END, f"   |   ")
+        text_area.insert(tk.END, f"{Pa_current:>4d}   |  {Sy_current:>4d}   \n")
         text_area.see(tk.END)
 
         # plot Start

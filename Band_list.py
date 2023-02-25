@@ -87,7 +87,13 @@ def longest_value(dict_a):
 
 
 def Check_testband(
-    Rat_option_var, Ch_option_var, User_defined_band, User_defined_ch, Band_Select_Main_var, Band_Select_Sub_var
+    Rat_option_var,
+    Ch_option_var,
+    User_defined_path,
+    User_defined_band,
+    User_defined_ch,
+    Band_Select_Main_var,
+    Band_Select_Sub_var,
 ):
     W_list = {0: [1, 2, 4, 5, 8], 1: [1, 2, 4]}
     B_list = {
@@ -98,15 +104,25 @@ def Check_testband(
         0: [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78],
         1: [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78],
     }
+    N_of_Channel = Ch_option_var.get()
 
     if Rat_option_var.get() == 1:  # 3G
         Test_band_ch_list = {}
 
-        Temp1 = [i for c, i in enumerate(W_list[0]) if Band_Select_Main_var[c].get() != True]
-        W_list[0] = [x for x in W_list[0] if x not in Temp1]
+        if N_of_Channel == 3:
+            Temp1 = int(User_defined_band[1:])
+            User_defined_ch = [int(x) for x in User_defined_ch.split(",")]
 
-        Temp2 = [i for c, i in enumerate(W_list[1]) if Band_Select_Sub_var[c].get() != True]
-        W_list[1] = [x for x in W_list[1] if x not in Temp2]
+            if User_defined_path == "Main":
+                path = 0
+            elif User_defined_path == "Sub":
+                path = 1
+        else:
+            Temp1 = [i for c, i in enumerate(W_list[0]) if Band_Select_Main_var[c].get() != True]
+            W_list[0] = [x for x in W_list[0] if x not in Temp1]
+
+            Temp2 = [i for c, i in enumerate(W_list[1]) if Band_Select_Sub_var[c].get() != True]
+            W_list[1] = [x for x in W_list[1] if x not in Temp2]
 
         fdd_1ch_list = {
             1: [10700],
@@ -124,31 +140,43 @@ def Check_testband(
             8: [2937, 3013, 3088],
         }
 
-        N_of_Channel = Ch_option_var.get()
+        fdd_User = {
+            1: [x for x in range(10562, 10839, 1)],
+            2: [x for x in range(9662, 9939, 1)],
+            4: [x for x in range(1537, 1739, 1)],
+            5: [x for x in range(4357, 4459, 1)],
+            8: [x for x in range(2937, 3089, 1)],
+        }
 
         if N_of_Channel == 1:  # 1 CH
             Test_band_ch_list = {
                 0: {k: fdd_1ch_list[k] for k in W_list[0] if k in fdd_1ch_list},
                 1: {k: fdd_1ch_list[k] for k in W_list[1] if k in fdd_1ch_list},
             }
-            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 2:  # 3 CH
             Test_band_ch_list = {
                 0: {k: fdd_3ch_list[k] for k in W_list[0] if k in fdd_3ch_list},
                 1: {k: fdd_3ch_list[k] for k in W_list[1] if k in fdd_3ch_list},
             }
-            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 3:  # User Define
-            new_char = [int(x.strip()) for x in User_defined_ch.split(",")]
-            key = [int(s) for s in key]
-            val = dict.fromkeys(key, new_char)
+            matches = {k: v for k, v in fdd_User.items() if k == Temp1}
+            if matches:
+                (matched_key, matched_values) = list(matches.items())[0]
+                Test_band_ch_list = {
+                    path: {matched_key: [value for value in User_defined_ch if value in matched_values]},
+                }
 
     elif Rat_option_var.get() == 2:  # LTE
         Test_band_ch_list = {}
-        N_of_Channel = Ch_option_var.get()
 
         if N_of_Channel == 3:
-            key = User_defined_band[1:]
+            Temp1 = int(User_defined_band[1:])
+            User_defined_ch = [int(x) for x in User_defined_ch.split(",")]
+
+            if User_defined_path == "Main":
+                path = 0
+            elif User_defined_path == "Sub":
+                path = 1
         else:
             Temp1 = [i for c, i in enumerate(B_list[0]) if Band_Select_Main_var[c].get() != True]
             B_list[0] = [x for x in B_list[0] if x not in Temp1]
@@ -202,34 +230,67 @@ def Check_testband(
             40: [38700, 39150, 39600],
             41: [39700, 40620, 41540],
         }
-
+        fdd_User = {
+            1: [x for x in range(0, 600, 1)],
+            2: [x for x in range(600, 1200, 1)],
+            3: [x for x in range(1200, 1950, 1)],
+            4: [x for x in range(1950, 2400, 1)],
+            5: [x for x in range(2400, 2650, 1)],
+            7: [x for x in range(2750, 3450, 1)],
+            8: [x for x in range(2450, 3800, 1)],
+            12: [x for x in range(5010, 5180, 1)],
+            13: [x for x in range(5180, 5280, 1)],
+            17: [x for x in range(5730, 5850, 1)],
+            18: [x for x in range(5850, 6000, 1)],
+            19: [x for x in range(6000, 6150, 1)],
+            20: [x for x in range(6150, 6450, 1)],
+            25: [x for x in range(8040, 8689, 1)],
+            28: [x for x in range(9210, 9660, 1)],
+            66: [x for x in range(66436, 67336, 1)],
+        }
+        tdd_User = {
+            38: [x for x in range(37750, 38250, 1)],
+            39: [x for x in range(38250, 38650, 1)],
+            40: [x for x in range(38650, 39650, 1)],
+            41: [x for x in range(39650, 41590, 1)],
+        }
         if N_of_Channel == 1:  # 1 CH
             val = merge_dic(fdd_1ch_list, tdd_1ch_list)
             Test_band_ch_list = {
                 0: {k: val[k] for k in B_list[0] if k in val},
                 1: {k: val[k] for k in B_list[1] if k in val},
             }
-            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 2:  # 3 CH
             val = merge_dic(fdd_3ch_list, tdd_3ch_list)
             Test_band_ch_list = {
                 0: {k: val[k] for k in B_list[0] if k in val},
                 1: {k: val[k] for k in B_list[1] if k in val},
             }
-            key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 3:  # User Define
-            new_char = [int(x.strip()) for x in User_defined_ch.split(",")]
-            key = [int(s) for s in key]
-            val = dict.fromkeys(key, new_char)
-
+            val = merge_dic(fdd_User, tdd_User)
+            matches = {k: v for k, v in val.items() if k == Temp1}
+            if matches:
+                (matched_key, matched_values) = list(matches.items())[0]
+                Test_band_ch_list = {
+                    path: {matched_key: [value for value in User_defined_ch if value in matched_values]},
+                }
     elif Rat_option_var.get() == 3:  # NR
         Test_band_ch_list = {}
 
-        Temp1 = [i for c, i in enumerate(N_list[0]) if Band_Select_Main_var[c].get() != True]
-        N_list[0] = [x for x in N_list[0] if x not in Temp1]
+        if N_of_Channel == 3:
+            Temp1 = int(User_defined_band[1:])
+            User_defined_ch = [int(x) for x in User_defined_ch.split(",")]
 
-        Temp2 = [i for c, i in enumerate(N_list[1]) if Band_Select_Sub_var[c].get() != True]
-        N_list[1] = [x for x in N_list[1] if x not in Temp2]
+            if User_defined_path == "Main":
+                path = 0
+            elif User_defined_path == "Sub":
+                path = 1
+        else:
+            Temp1 = [i for c, i in enumerate(N_list[0]) if Band_Select_Main_var[c].get() != True]
+            N_list[0] = [x for x in N_list[0] if x not in Temp1]
+
+            Temp2 = [i for c, i in enumerate(N_list[1]) if Band_Select_Sub_var[c].get() != True]
+            N_list[1] = [x for x in N_list[1] if x not in Temp2]
 
         fdd_1ch_list = {
             1: [428000],
@@ -278,7 +339,27 @@ def Check_testband(
             77: [620334, 650000, 679666],
             78: [620334, 636667, 653000],
         }
-
+        fdd_User = {
+            1: [x for x in range(422000, 434001, 1)],
+            2: [x for x in range(386000, 398001, 1)],
+            3: [x for x in range(361000, 376001, 1)],
+            5: [x for x in range(173800, 178801, 1)],
+            7: [x for x in range(524000, 538001, 1)],
+            8: [x for x in range(185000, 192001, 1)],
+            12: [x for x in range(145800, 149201, 1)],
+            13: [x for x in range(149200, 151201, 1)],
+            18: [x for x in range(172000, 175001, 1)],
+            20: [x for x in range(158200, 164201, 1)],
+            25: [x for x in range(386000, 399001, 1)],
+            28: [x for x in range(151600, 160601, 1)],
+            66: [x for x in range(422000, 440001, 1)],
+        }
+        tdd_User = {
+            38: [x for x in range(514000, 524001, 1)],
+            39: [x for x in range(376000, 384001, 1)],
+            40: [x for x in range(460000, 480001, 1)],
+            41: [x for x in range(499200, 537997, 1)],
+        }
         N_of_Channel = Ch_option_var.get()
 
         if N_of_Channel == 1:  # 1 CH
@@ -296,9 +377,13 @@ def Check_testband(
             }
             key = dict.fromkeys(Test_band_ch_list)
         elif N_of_Channel == 3:  # User Define
-            new_char = [int(x.strip()) for x in User_defined_ch.split(",")]
-            key = [int(s) for s in key]
-            val = dict.fromkeys(key, new_char)
+            val = merge_dic(fdd_User, tdd_User)
+            matches = {k: v for k, v in val.items() if k == Temp1}
+            if matches:
+                (matched_key, matched_values) = list(matches.items())[0]
+                Test_band_ch_list = {
+                    path: {matched_key: [value for value in User_defined_ch if value in matched_values]},
+                }
 
     return Test_band_ch_list
 
@@ -833,13 +918,15 @@ def BW_setting(v, Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Se
 
     Active_band_main = []
     Active_band_sub = []
-    for c, i in enumerate(Band_Select_Main_var):
-        if Band_Select_Main_var[c].get():
-            Active_band_main.append(int(Band_index_Main[c][1:]))
+    if Band_index_Main:
+        for c, i in enumerate(Band_Select_Main_var):
+            if Band_Select_Main_var[c].get():
+                Active_band_main.append(int(Band_index_Main[c][1:]))
 
-    for c, i in enumerate(Band_Select_Sub_var):
-        if Band_Select_Sub_var[c].get():
-            Active_band_sub.append(int(Band_index_Sub[c][1:]))
+    if Band_index_Sub:
+        for c, i in enumerate(Band_Select_Sub_var):
+            if Band_Select_Sub_var[c].get():
+                Active_band_sub.append(int(Band_index_Sub[c][1:]))
 
     rat, dict1 = dict_compare_list(v, Active_band_main)
     rat, dict2 = dict_compare_list(v, Active_band_sub)

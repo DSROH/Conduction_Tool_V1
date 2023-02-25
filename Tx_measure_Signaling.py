@@ -19,12 +19,17 @@ def Callbox_reset(Selected_path, Equip, Callbox, text_area):
     func.loss_table(Selected_path, "Loss_table_Main", Equip, Callbox)
 
 
-def Call_connection(Callbox, dut, text_area):
+def Call_connection(Callbox, E3632a_1, E3632a_2, dut, text_area):
     # CALL연결
     sec = 0
     status = Callbox.query("FETC:LTE:SIGN:PSW:STAT?").strip("\n")
-
+    count = 0
     while status != "ATT":
+        if count > 3:
+            recycle = func.OCP_Check(E3632a_1, E3632a_2, text_area)
+            func.Psupply_vcc_on_off(E3632a_1, 4.5)
+            response = dut.check_bcm(text_area)
+            count = 0
         if status == "OFF":
             # Callbox.write("SOUR:LTE:SIGN:CELL:STAT OFF")
             Callbox.write("SOUR:LTE:SIGN:CELL:STAT ON")
@@ -44,6 +49,7 @@ def Call_connection(Callbox, dut, text_area):
         text_area.insert(tk.END, f"{status:<4} {sec:>3} Sec.")
         text_area.see(tk.END)
         if sec == 50:
+            text_area.insert(tk.END, f"\n")
             response = dut.at_write("AT+MODECHAN=0,2")
             response = dut.at_write("AT+DISPTEST=0,3")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
@@ -54,21 +60,22 @@ def Call_connection(Callbox, dut, text_area):
             time.sleep(1)
             response = dut.at_write("AT+AIRPMODE=0,0,0,0")
             text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
+            response = dut.at_write("AT+DISPTEST=0,4")
+            text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
+            text_area.see(tk.END)
             response = dut.at_write("AT+MODECHAN=0,0")
             sec = 0
+            count += 1
 
     Callbox.write("CALL:LTE:SIGN:PSW:ACT CONN")
     time.sleep(3)
-    response = dut.at_write("AT+MODECHAN=0,2")
-    response = dut.at_write("AT+DISPTEST=0,3")
-    response = dut.at_write("AT+MODECHAN=0,0")
     func.Check_OPC(Callbox)
     text_area.insert(tk.END, f"\n")
 
     return status
 
 
-def Handover(Callbox, dut, band, channel, text_area):
+def Handover(Callbox, dut, E3632a_1, E3632a_2, band, channel, text_area):
     Callbox.write("CONFigure:LTE:SIGN:UL:PCC:PUSCh:TPC:CLTPower 10")
     Callbox.write("CONFigure:LTE:SIGN:UL:PCC:PUSCh:TPC:SET CLOop")
     Callbox.write("CONFigure:LTE:SIGN:DL:RSEP:LEV -50")
@@ -76,7 +83,7 @@ def Handover(Callbox, dut, band, channel, text_area):
     while True:
         if band in [38, 39, 40, 41]:
             Tdd_initialize(Callbox, 38, 38000, text_area)
-            stat = Call_connection(Callbox, dut, text_area)
+            stat = Call_connection(Callbox, E3632a_1, E3632a_2, dut, text_area)
             Tdd_measure_setting(Callbox)
         Callbox.write(f"PREP:LTE:SIGN:HAND OB{band}, {channel}, B100, NS01")
         Callbox.write("CALL:LTE:SIGN:HAND:STAR")
@@ -235,7 +242,7 @@ def Tdd_measure_setting(Callbox):
     func.Check_OPC(Callbox)
 
 
-def calldrop_check(dut, Callbox, PwrL, text_area):
+def calldrop_check(dut, Callbox, E3632a_1, E3632a_2, PwrL, text_area):
     Callbox.write("INIT:LTE:MEAS:MEV")
     aclr = Callbox.query("FETCh:LTE:MEASurement:MEValuation:ACLR:AVER?").split(",")
 
@@ -257,7 +264,7 @@ def calldrop_check(dut, Callbox, PwrL, text_area):
         response = dut.at_write("AT+AIRPMODE=0,0,0,0")
         text_area.insert(tk.END, f"{response[0]:<40}\t|\t{response[2::2]}\n")
         response = dut.at_write("AT+MODECHAN=0,0")
-        stat = Call_connection(Callbox, dut, text_area)
+        stat = Call_connection(Callbox, E3632a_1, E3632a_2, dut, text_area)
         aclr = Callbox.query("FETCh:LTE:MEAS:MEValuation:ACLR:AVERage?").split(",")
 
     Callbox.write("CONFigure:LTE:SIGN:UL:TPC:SET MAXP")
@@ -367,15 +374,18 @@ def Power_loop(
 
     text_area.insert(
         tk.END,
-        f"   TARGET  |   POWER   |   UTRA2   |   UTRA1   |  E-UTRA1  |  E-UTRA1  |   UTRA1   |   UTRA2   | "
-        f" P.AMP  |  SYSTEM  \n",
+        f"   TARGET  |   POWER   |   UTRA2   |   UTRA1   |  E-UTRA1  |  E-UTRA1  |   UTRA1   |   UTRA2   |"
+        f"   P.AMP  |  SYSTEM  \n",
     )
+    text_area.see(tk.END)
+    text_area.insert(tk.END, "-" * 116)
+    text_area.insert(tk.END, "\n")
     text_area.see(tk.END)
 
     for PwrL in pwr_levels:
         Retry_count = 1
 
-        aclr = calldrop_check(dut, Callbox, PwrL, text_area)
+        aclr = calldrop_check(dut, Callbox, E3632a_1, E3632a_2, PwrL, text_area)
         Pwr_setting(Callbox, PwrL, text_area)
 
         Callbox.write("INIT:LTE:MEAS:MEV")
@@ -383,14 +393,14 @@ def Power_loop(
         aclr = Callbox.query("FETCh:LTE:MEASurement:MEValuation:ACLR:AVER?").split(",")
 
         if aclr[4] == "INV":
-            aclr = calldrop_check(dut, Callbox, PwrL, text_area)
+            aclr = calldrop_check(dut, Callbox, E3632a_1, E3632a_2, PwrL, text_area)
 
         Callbox.write("INIT:LTE:MEAS:MEV")
         func.Check_OPC(Callbox)
         aclr = Callbox.query("FETCh:LTE:MEASurement:MEValuation:ACLR:AVER?").split(",")
 
         if aclr[4] == "INV":
-            aclr = calldrop_check(dut, Callbox, PwrL, text_area)
+            aclr = calldrop_check(dut, Callbox, E3632a_1, E3632a_2, PwrL, text_area)
 
         Lutra2 = round(float(aclr[1]), 2)
         Lutra1 = round(float(aclr[2]), 2)
@@ -408,12 +418,17 @@ def Power_loop(
             Max_diff = 0.5
 
             while Power_diff > Max_diff:
-                text_area.insert(
-                    tk.END,
-                    f"    {PwrL:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
-                    f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-                    f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
-                )
+                List_aclr = [Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2]
+                text_area.tag_config("red_bold", foreground="red", font=("Consolas", 9, "bold"))
+                text_area.insert(tk.END, f"    {PwrL:>3}    |  {TX_power:>6.2f}   |   ")
+                for i_aclr in List_aclr:
+                    if i_aclr < 38.0:
+                        text_area.insert(tk.END, f"{i_aclr:^5.2f}", "red_bold")
+                        text_area.insert(tk.END, f"   |   ")
+                    else:
+                        text_area.insert(tk.END, f"{i_aclr:^5.2f}")
+                        text_area.insert(tk.END, f"   |   ")
+                text_area.insert(tk.END, f"{Pa_current:>4d}   |   {Sy_current:>4d}   \n")
                 text_area.see(tk.END)
                 text_area.insert(tk.END, "-" * 116)
                 text_area.insert(
@@ -446,7 +461,7 @@ def Power_loop(
                 aclr = Callbox.query("FETCh:LTE:MEASurement:MEValuation:ACLR:AVER?").split(",")
 
                 if aclr[4] == "INV":
-                    aclr = calldrop_check(dut, Callbox, PwrL, text_area)
+                    aclr = calldrop_check(dut, Callbox, E3632a_1, E3632a_2, PwrL, text_area)
 
                 TX_power = round(float(aclr[4]), 1)
                 Leutra = round(float(aclr[3]), 1)
@@ -463,12 +478,17 @@ def Power_loop(
                 else:
                     Retry_count += 1
 
-        text_area.insert(
-            tk.END,
-            f"    {PwrL:>3}    |  {TX_power:>6.2f}   |   {Lutra2:^5.2f}   |   {Lutra1:^5.2f}   |  "
-            f" {Leutra:^5.2f}   |   {Reutra:^5.2f}   |   {Rutra1:^5.2f}   |   {Rutra2:^5.2f}   | "
-            f" {Pa_current:>4d}   |   {Sy_current:>4d}   \n",
-        )
+        List_aclr = [Lutra2, Lutra1, Leutra, Reutra, Rutra1, Rutra2]
+        text_area.tag_config("red_bold", foreground="red", font=("Consolas", 9, "bold"))
+        text_area.insert(tk.END, f"    {PwrL:>3}    |  {TX_power:>6.2f}   |   ")
+        for i_aclr in List_aclr:
+            if i_aclr < 38.0:
+                text_area.insert(tk.END, f"{i_aclr:^5.2f}", "red_bold")
+                text_area.insert(tk.END, f"   |   ")
+            else:
+                text_area.insert(tk.END, f"{i_aclr:^5.2f}")
+                text_area.insert(tk.END, f"   |   ")
+        text_area.insert(tk.END, f"{Pa_current:>4d}   |   {Sy_current:>4d}   \n")
         text_area.see(tk.END)
 
         tx_result.loc[PwrL, :] = [
@@ -569,12 +589,12 @@ def LTE_Signaling_test(
             if Status != "CEST":
                 if Testband in [38, 39, 40, 41]:
                     Tdd_initialize(Callbox, 38, 38000, text_area)
-                    stat = Call_connection(Callbox, dut, text_area)
+                    stat = Call_connection(Callbox, E3632a_1, E3632a_2, dut, text_area)
                     time.sleep(3)
                     Tdd_measure_setting(Callbox)
                 else:
                     Fdd_initialize(Callbox, 1, 300, text_area)
-                    stat = Call_connection(Callbox, dut, text_area)
+                    stat = Call_connection(Callbox, E3632a_1, E3632a_2, dut, text_area)
                     time.sleep(3)
                     Fdd_measure_setting(Callbox)
 
@@ -585,7 +605,7 @@ def LTE_Signaling_test(
                     Connected_CH = int(Callbox.query("CONFigure:LTE:SIGN:RFS:PCC:CHAN:DL?"))
 
                     if channel != Connected_CH:
-                        Connected_CH = Handover(Callbox, dut, Testband, channel, text_area)
+                        Connected_CH = Handover(Callbox, dut, E3632a_1, E3632a_2, Testband, channel, text_area)
 
                     text_area.insert(tk.END, "\n")
                     text_area.insert(tk.END, "*" * 44)

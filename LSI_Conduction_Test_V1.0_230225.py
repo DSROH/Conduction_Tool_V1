@@ -22,11 +22,11 @@ import Function as func
 import Band_list as blist
 
 # %%
-CB_list, PS_list, CP_list = func.Equipment_scan()
+CB_list, PS_list1, PS_list2, CP_list = func.Equipment_scan()
 
 Win_GUI = ttkbst.Window(title="LSI Conduction Test V1.0")
 Win_GUI.attributes("-topmost", True)
-Win_GUI.geometry("1625x865")
+Win_GUI.geometry("1620x865")
 
 
 def change_theme():
@@ -80,13 +80,13 @@ plt.close()
 
 # %%
 Scrolled_txt_frame = ttkbst.Frame(Win_GUI)
-Scrolled_txt_frame.place(x=765, y=5, width=855, height=815)
+Scrolled_txt_frame.place(x=765, y=0, width=855, height=820)
 
 text_area = st.ScrolledText(Scrolled_txt_frame, font=("Consolas", 9))
-text_area.place(x=0, y=0, width=855, height=810)
+text_area.place(x=0, y=5, width=855, height=810)
 
 Auth_frame = ttkbst.Frame(Win_GUI)
-Auth_frame.place(x=765, y=820, width=855, height=40)
+Auth_frame.place(x=765, y=820, width=855, height=45)
 
 Author = ttkbst.Label(Auth_frame, text="dongsub.roh@samsung.com")
 Author.place(x=685, y=10)
@@ -99,10 +99,8 @@ TX_Main_frame = ttkbst.Labelframe(Setting_frame, text="TX Main")
 TX_Main_frame.place(x=0, y=50, width=400, height=120)
 
 
-def Select_Main(v):
-
-    global Band_Select_Main_var
-    global Band_index_Main
+def Select_Main(v, ch_option, User_defined_path, User_defined_band):
+    global Band_Select_Main_var, Band_index_Main
     Band_index_Main = []
 
     for widget in TX_Main_frame.winfo_children():
@@ -141,19 +139,28 @@ def Select_Main(v):
         else:
             pos_x = 10 + 55 * (count % 7)
             pos_y = 5 + 35 * (count // 7)
-        Chkbox_Main[count].place(x=pos_x, y=pos_y, width=50)
-        Band_Select_Main_var[count].set(True)
 
+        if (ch_option == 3) & (User_defined_path == "Main"):
+            rat = User_defined_band[:1]
+            User_Blist_Main = int(User_defined_band[1:])
+            if i == User_Blist_Main:
+                Band_Select_Main_var[count].set(True)
+            else:
+                Band_Select_Main_var[count].set(False)
+        elif (ch_option == 3) & (User_defined_path == "Sub"):
+            Band_Select_Main_var[count].set(False)
+        else:
+            Band_Select_Main_var[count].set(True)
+
+        Chkbox_Main[count].place(x=pos_x, y=pos_y, width=50)
 
 # %%
 TX_Sub_frame = ttkbst.Labelframe(Setting_frame, text="TX Sub")
 TX_Sub_frame.place(x=0, y=170, width=400, height=120)
 
 
-def Select_Sub(v):
-
-    global Band_Select_Sub_var
-    global Band_index_Sub
+def Select_Sub(v, ch_option, User_defined_path, User_defined_band):
+    global Band_Select_Sub_var, Band_index_Sub
     Band_index_Sub = []
 
     for widget in TX_Sub_frame.winfo_children():
@@ -189,18 +196,98 @@ def Select_Sub(v):
         else:
             pos_x = 10 + 55 * (count % 7)
             pos_y = 5 + 35 * (count // 7)
-        if (v == 2) & (i in [5, 8, 12, 13, 17, 18, 19, 20, 26]):
-            Chkbox_Sub[count].config(state=tk.DISABLED)
-            Band_Select_Sub_var[count].set(False)
-        elif (v == 3) & (i in [5, 8, 12, 13, 20, 26, 39]):
-            Chkbox_Sub[count].config(state=tk.DISABLED)
+
+        if (ch_option == 3) & (User_defined_path == "Sub"):
+            rat = User_defined_band[:1]
+            User_Blist_Sub = int(User_defined_band[1:])
+            if i == User_Blist_Sub:
+                Band_Select_Sub_var[count].set(True)
+            else:
+                Band_Select_Sub_var[count].set(False)
+        elif (ch_option == 3) & (User_defined_path == "Main"):
             Band_Select_Sub_var[count].set(False)
         else:
-            Band_Select_Sub_var[count].set(True)
+            if (v == 2) & (i in [5, 8, 12, 13, 17, 18, 19, 20, 26]):
+                Chkbox_Sub[count].config(state=tk.DISABLED)
+                Band_Select_Sub_var[count].set(False)
+            elif (v == 3) & (i in [5, 8, 12, 13, 20, 26, 39]):
+                Chkbox_Sub[count].config(state=tk.DISABLED)
+                Band_Select_Sub_var[count].set(False)
+            else:
+                Band_Select_Sub_var[count].set(True)
+
         Chkbox_Sub[count].place(x=pos_x, y=pos_y, width=50)
 
-
 # %%
+User_defined_path = []
+User_defined_band = []
+User_defined_ch = []
+
+
+def func_userch(Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Select_Sub_var):
+    global ChildWin_userdefine, Combo_user_define_path, User_defined_path
+
+    try:
+        ChildWin_userdefine.destroy()
+    except:
+        pass
+
+    ChildWin_userdefine = ttkbst.Toplevel(title="User Defined Channel")
+    ChildWin_userdefine.attributes("-topmost", True)
+    ChildWin_userdefine.geometry("430x50")
+    ChildWin_userdefine.resizable(False, False)
+
+    TX_Path = ["Main", "Sub"]
+    Combo_user_define_path = ttkbst.Combobox(ChildWin_userdefine, values=TX_Path, font=("Calibri", 10))
+    Combo_user_define_path.place(x=10, y=10, width=60, height=30)
+    Combo_user_define_path.current(0)
+    Combo_user_define_path.bind("<<ComboboxSelected>>", lambda event: [User_select_band()])
+
+    Combo_user_define_band = ttkbst.Combobox(ChildWin_userdefine, font=("Calibri", 10))
+    Combo_user_define_band.place(x=80, y=10, width=60, height=30)
+    Entry_user_define_ch = ttkbst.Entry(ChildWin_userdefine, justify=tk.LEFT, font=("Consolas", 10))
+    Entry_user_define_ch.place(x=150, y=10, width=200, height=30)
+    OK_btn = ttkbst.Button(ChildWin_userdefine, text="OK")
+    OK_btn.place(x=360, y=10, width=60, height=30)
+
+
+def User_select_band():
+    global ChildWin_userdefine, Combo_user_define_band
+    if Combo_user_define_path.get() == "Main":
+        User_band = [x for c, x in enumerate(Band_index_Main) if Band_Select_Main_var[c].get() == True]
+    else:
+        User_band = [x for c, x in enumerate(Band_index_Sub) if Band_Select_Sub_var[c].get() == True]
+    Combo_user_define_band = ttkbst.Combobox(ChildWin_userdefine, values=User_band, font=("Calibri", 10))
+    Combo_user_define_band.place(x=80, y=10, width=60, height=30)
+    Combo_user_define_band.current(0)
+    Combo_user_define_band.bind("<<ComboboxSelected>>", lambda event: [User_input_ch()])
+
+
+def User_input_ch():
+    global ChildWin_userdefine, Entry_user_define_ch
+
+    Entry_user_define_ch = ttkbst.Entry(ChildWin_userdefine, justify=tk.LEFT, font=("Consolas", 10))
+    Entry_user_define_ch.place(x=150, y=10, width=200, height=30)
+
+    OK_btn = ttkbst.Button(ChildWin_userdefine, text="OK", command=lambda: [func_userch_ok()])
+    OK_btn.place(x=360, y=10, width=60, height=30)
+
+
+def func_userch_ok():
+    global ChildWin_userdefine, Ch_option_var
+    global Combo_user_define_path, Combo_user_define_band, Entry_user_define_ch
+    global User_defined_path, User_defined_band, User_defined_ch
+
+    Ch_option_var.set(3)
+    User_defined_path = Combo_user_define_path.get()
+    User_defined_band = Combo_user_define_band.get()
+    User_defined_ch = Entry_user_define_ch.get()
+    ChildWin_userdefine.destroy()
+
+    Select_Main(Rat_option_var.get(), 3, User_defined_path, User_defined_band)
+    Select_Sub(Rat_option_var.get(), 3, User_defined_path, User_defined_band)
+
+
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
 Rat_frame.place(x=0, y=0, width=150, height=50)
 
@@ -212,8 +299,8 @@ Rat_Option1 = ttkbst.Radiobutton(
     value=1,
     variable=Rat_option_var,
     command=lambda: [
-        Select_Main(Rat_option_var.get()),
-        Select_Sub(Rat_option_var.get()),
+        Select_Main(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
+        Select_Sub(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
     ],
 )
 Rat_Option1.place(x=10, y=6, width=40)
@@ -225,8 +312,8 @@ Rat_Option2 = ttkbst.Radiobutton(
     value=2,
     variable=Rat_option_var,
     command=lambda: [
-        Select_Main(Rat_option_var.get()),
-        Select_Sub(Rat_option_var.get()),
+        Select_Main(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
+        Select_Sub(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
     ],
 )
 Rat_Option2.place(x=55, y=6, width=40)
@@ -238,78 +325,47 @@ Rat_Option3 = ttkbst.Radiobutton(
     value=3,
     variable=Rat_option_var,
     command=lambda: [
-        Select_Main(Rat_option_var.get()),
-        Select_Sub(Rat_option_var.get()),
+        Select_Main(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
+        Select_Sub(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
     ],
 )
 Rat_Option3.place(x=100, y=6, width=40)
 
 # %%
 Ch_frame = ttkbst.Labelframe(Setting_frame, text="Channel")
-Ch_frame.place(x=155, y=0, width=125, height=50)
+Ch_frame.place(x=155, y=0, width=205, height=50)
 
 Ch_option_var = ttkbst.IntVar()
 Ch_Option1 = ttkbst.Radiobutton(Ch_frame, text="1CH ", value=1, variable=Ch_option_var)
-Ch_Option1.place(x=10, y=6, width=50)
+Ch_Option1.place(x=10, y=6, width=45)
 
 Ch_Option2 = ttkbst.Radiobutton(Ch_frame, text="3CH ", value=2, variable=Ch_option_var)
-Ch_Option2.place(x=65, y=6, width=50)
+Ch_Option2.place(x=60, y=6, width=45)
 
+Ch_Option3 = ttkbst.Radiobutton(Ch_frame, text="User Define", value=3, variable=Ch_option_var)
+Ch_Option3.place(x=110, y=6, width=85)
+Ch_Option3.config(state=tk.DISABLED)
 
-def func_userch():
-    global Band_index_Main
-    global ChildWin_userch
-    global Combo_user_define_ch
-    global Entry_Userdefined_ch
-    global User_defined_band
-    global User_defined_ch
-
-    try:
-        ChildWin_userch.destroy()
-    except:
-        pass
-
-    ChildWin_userch = ttkbst.Toplevel(title="User Defined Channel")
-    ChildWin_userch.attributes("-topmost", True)
-    ChildWin_userch.geometry("360x50")
-    ChildWin_userch.resizable(False, False)
-
-    Band = [x for x in Band_index_Main]
-    Combo_user_define_ch = ttkbst.Combobox(ChildWin_userch, values=Band, font=("Calibri", 10))
-    Combo_user_define_ch.place(x=10, y=10, width=60, height=30)
-    Combo_user_define_ch.current(0)
-    Entry_Userdefined_ch = ttkbst.Entry(ChildWin_userch, justify=LEFT, font=("Consolas", 10))
-    Entry_Userdefined_ch.insert(0, User_defined_ch)
-    Entry_Userdefined_ch.place(x=80, y=10, width=200, height=30)
-    OK_btn = ttkbst.Button(ChildWin_userch, text="OK", command=func_userch_ok)
-    OK_btn.place(x=290, y=10, width=60, height=30)
-
-
-def func_userch_ok():
-    global Ch_option_var
-    global Combo_user_define_ch
-    global Entry_Userdefined_ch
-    global User_defined_band
-    global User_defined_ch
-
-    Ch_option_var.set(3)
-    User_defined_band = Combo_user_define_ch.get()
-    User_defined_ch = Entry_Userdefined_ch.get()
-    ChildWin_userch.destroy()
-
-
-# User Define 없을 경우 Error 방지 목적으로 빈 리스트 생성, user define 시 값 지정됨
-User_defined_band = []
-User_defined_ch = []
 
 Btn_user_defined_ch = ttkbst.Button(
     Setting_frame,
     text="User Defined CH (F8)",
     style="danger.TButton",
-    command=func_userch,
+    command=lambda: [
+        Select_Main(Rat_option_var.get(), 1, User_defined_path, User_defined_band),
+        Select_Sub(Rat_option_var.get(), 1, User_defined_path, User_defined_band),
+        func_userch(Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Select_Sub_var),
+    ],
 )
-Btn_user_defined_ch.place(x=285, y=15, width=140, height=30)
-Win_GUI.bind("<F8>", lambda event: [func_userch()])
+Btn_user_defined_ch.place(x=365, y=11, width=142, height=35)
+Win_GUI.bind(
+    "<F8>",
+    lambda event: [
+        Select_Main(Rat_option_var.get(), 1, User_defined_path, User_defined_band),
+        Select_Sub(Rat_option_var.get(), 1, User_defined_path, User_defined_band),
+        func_userch(Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Select_Sub_var),
+    ],
+)
 
 # %%
 Pw_option_var = ttkbst.IntVar()
@@ -319,7 +375,7 @@ Btn_pwsetting = ttkbst.Button(
     style="danger.TButton",
     command=lambda: [blist.Power_setting(Pw_option_var)],
 )
-Btn_pwsetting.place(x=550, y=15, width=120, height=30)
+Btn_pwsetting.place(x=634, y=11, width=122, height=35)
 
 Win_GUI.bind("<F10>", lambda event: [blist.Power_setting(Pw_option_var)])
 
@@ -501,34 +557,36 @@ def Callback_CB(combo1, Rat_option_var):
     else:
         msgbox.showwarning("Warning", "Select Call_Box")
 
-
 # %%
 toolbar_frame = ttkbst.Frame(Left_frame)
 toolbar_frame.place(x=5, y=80, width=755, height=40)
 
 Label1 = ttkbst.Label(toolbar_frame, text="Call Box")
-Label1.place(x=5, y=10, width=50)
+Label1.place(x=0, y=10, width=50)
 combo1 = ttkbst.Combobox(toolbar_frame, values=CB_list, font=("Calibri", 10))
-combo1.place(x=65, y=5, width=125)
+combo1.place(x=55, y=5, width=105)
 combo1.bind("<<ComboboxSelected>>", lambda event: [Callback_CB(combo1, Rat_option_var)])
 
 Label2 = ttkbst.Label(toolbar_frame, text="System Power")
-Label2.place(x=205, y=10, width=80)
-combo2 = ttkbst.Combobox(toolbar_frame, values=PS_list, font=("Calibri", 10))
-combo2.place(x=295, y=5, width=115)
+Label2.place(x=170, y=10, width=80)
+combo2 = ttkbst.Combobox(toolbar_frame, values=PS_list1, font=("Calibri", 10))
+combo2.place(x=255, y=5, width=100)
 combo2.bind("<<ComboboxSelected>>", lambda event: [func.Callback_Sys_P(combo2)])
 
 Label3 = ttkbst.Label(toolbar_frame, text="PA VCC")
-Label3.place(x=425, y=10, width=50)
-combo3 = ttkbst.Combobox(toolbar_frame, values=PS_list, font=("Calibri", 10))
-combo3.place(x=485, y=5, width=115)
+Label3.place(x=365, y=10, width=50)
+combo3 = ttkbst.Combobox(toolbar_frame, values=PS_list2, font=("Calibri", 10))
+combo3.place(x=420, y=5, width=100)
 combo3.bind("<<ComboboxSelected>>", lambda event: [func.Callback_PA_Vcc(combo3)])
 
 Label4 = ttkbst.Label(toolbar_frame, text="COM Port")
-Label4.place(x=615, y=10, width=60)
+Label4.place(x=530, y=10, width=60)
 combo4 = ttkbst.Combobox(toolbar_frame, values=CP_list, font=("Calibri", 10))
-combo4.place(x=685, y=5, width=70)
+combo4.place(x=595, y=5, width=60)
 combo4.bind("<<ComboboxSelected>>", lambda event: [func.Callback_Comport(combo4)])
+
+Equip_scan_btn = ttkbst.Button(toolbar_frame, text="Equip. Scan", command=lambda: [func.Equipment_scan()])
+Equip_scan_btn.place(x=665, y=5, width=90)
 
 # %%
 MIPI_frame = ttkbst.Labelframe(Setting_frame, text="MIPI")
@@ -539,8 +597,8 @@ Mipi_data = {
     "LB_SM": [2, 5, 29, 0],
     "OMH_PA": [0, 14, 29, 0],
     "OMH_SM": [0, 5, 29, 0],
-    "NR PA": [0, 0, 0, 0],
-    "NR SM": [0, 0, 0, 0],
+    "NR_PA": [4, 15, 29, 0],
+    "NR_SM": [4, 5, 29, 0],
 }
 Mipi_Label = [None] * len(Mipi_data)
 
@@ -550,8 +608,8 @@ Mipi_posy = {
     "LB_SM": [62, 62, 62, 62],
     "OMH_PA": [92, 92, 92, 92],
     "OMH_SM": [122, 122, 122, 122],
-    "NR PA": [152, 152, 152, 152],
-    "NR SM": [182, 182, 182, 182],
+    "NR_PA": [152, 152, 152, 152],
+    "NR_SM": [182, 182, 182, 182],
 }
 
 for count, i in enumerate(Mipi_data):
@@ -561,6 +619,16 @@ for count, i in enumerate(Mipi_data):
         Mipi_data[i][c].insert(0, j)
         Mipi_data[i][c].place(x=Mipi_posx[c], y=Mipi_posy[i][c], width=30, height=26)
         Mipi_Label[count].place(x=0, y=Mipi_posy[i][c], width=50, height=26)
+
+# %%
+Mipi_label_ch = ttkbst.Label(MIPI_frame, text="Ch", font=("Consolas", 8), anchor="center")
+Mipi_label_ch.place(x=60, y=5, width=30, height=26)
+Mipi_label_usid = ttkbst.Label(MIPI_frame, text="USID", font=("Consolas", 8), anchor="center")
+Mipi_label_usid.place(x=95, y=5, width=30, height=26)
+Mipi_label_addr = ttkbst.Label(MIPI_frame, text="Addr.", font=("Consolas", 8), anchor="center")
+Mipi_label_addr.place(x=130, y=5, width=30, height=26)
+Mipi_label_data = ttkbst.Label(MIPI_frame, text="Data", font=("Consolas", 8), anchor="center")
+Mipi_label_data.place(x=165, y=5, width=30, height=26)
 
 # %%
 s.configure("MIPI.TButton", font=("Calibri", 8, "bold"))
@@ -669,56 +737,60 @@ Btn_NRSMR.place(x=240, y=182, width=35, height=26)
 # %%
 # Cal log 파일 선택
 path_frame = ttkbst.Frame(Left_frame)
-path_frame.place(x=0, y=0, width=760, height=70)
+path_frame.place(x=5, y=5, width=755, height=70)
 
 Add_main_loss = ttkbst.Button(
     path_frame,
     text="Main Loss (F11)",
     command=lambda: [func.add_file(Main_loss_path)],
 )
-Add_main_loss.place(x=5, y=5, width=110, height=30)
+Add_main_loss.place(x=0, y=0, width=110, height=30)
 
 Main_loss_path = ttkbst.Entry(path_frame, width=60)
 Main_loss_path.insert(
     0,
     "C:\DIST\CONFIG\DASEUL\CABLE_LOSS\MeasuredCableLoss_DUT01_BtoB.dec",
 )
-Main_loss_path.place(x=120, y=5, width=515, height=30)
+Main_loss_path.place(x=115, y=0, width=515, height=30)
 
 Add_sub_loss = ttkbst.Button(
     path_frame,
     text="Sub Loss (F12)",
     command=lambda: [func.add_file(Sub_loss_path)],
 )
-Add_sub_loss.place(x=5, y=40, width=110, height=30)
+Add_sub_loss.place(x=0, y=35, width=110, height=30)
 
 Sub_loss_path = ttkbst.Entry(path_frame, width=60)
 Sub_loss_path.insert(
     0,
     "C:\DIST\CONFIG\DASEUL\CABLE_LOSS\MeasuredCableLoss_DUT01.dec",
 )
-Sub_loss_path.place(x=120, y=40, width=515, height=30)
+Sub_loss_path.place(x=115, y=35, width=515, height=30)
 
 Win_GUI.bind("<F11>", lambda event: [func.add_file(Main_loss_path)])
 Win_GUI.bind("<F12>", lambda event: [func.add_file(Sub_loss_path)])
 
-# %%
 Btn_power = ttkbst.Button(
     path_frame,
     text="Power ON (F4)",
     command=lambda: [threading.Thread(target=func.Power_on, args=(combo2, combo3, combo4, text_area)).start()],
 )
-Btn_power.place(x=640, y=5, width=120, height=30)
+Btn_power.place(x=635, y=0, width=120, height=30)
 Win_GUI.bind(
     "<F4>",
     lambda event: [threading.Thread(target=func.Power_on, args=(combo2, combo3, combo4, text_area)).start()],
 )
 
 # %%
-# combo1.current(0)
-combo2.current(0)
-combo3.current(1)
-combo4.current(0)
+combo_list = [combo1, combo2, combo3, combo4]
+for i in combo_list:
+    try:
+        if i == combo3:
+            i.current(1)
+        else:
+            i.current(0)
+    except:
+        pass
 
 Rat_Option2.invoke()
 Ch_option_var.set(1)  # 1로 세팅만 한다.
@@ -746,7 +818,7 @@ Btn_bwsetting = ttkbst.Button(
     ],
 )
 
-Btn_bwsetting.place(x=430, y=15, width=115, height=30)
+Btn_bwsetting.place(x=512, y=11, width=117, height=35)
 
 Win_GUI.bind(
     "<F9>",
@@ -781,6 +853,7 @@ Btn_strt = ttkbst.Button(
                 Run_mode_var,
                 Rat_option_var,
                 Ch_option_var,
+                User_defined_path,
                 User_defined_band,
                 User_defined_ch,
                 Band_Select_Main_var,
@@ -798,7 +871,7 @@ Btn_strt = ttkbst.Button(
         ).start()
     ],
 )
-Btn_strt.place(x=640, y=40, width=120, height=30)
+Btn_strt.place(x=635, y=35, width=120, height=30)
 
 Win_GUI.bind(
     "<F5>",
@@ -815,6 +888,7 @@ Win_GUI.bind(
                 Run_mode_var,
                 Rat_option_var,
                 Ch_option_var,
+                User_defined_path,
                 User_defined_band,
                 User_defined_ch,
                 Band_Select_Main_var,
@@ -861,3 +935,5 @@ Win_GUI.bind(
 # %%
 Win_GUI.resizable(False, False)
 Win_GUI.mainloop()
+
+
