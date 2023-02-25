@@ -249,6 +249,9 @@ def func_userch(Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Sele
     Entry_user_define_ch.place(x=150, y=10, width=200, height=30)
     OK_btn = ttkbst.Button(ChildWin_userdefine, text="OK")
     OK_btn.place(x=360, y=10, width=60, height=30)
+    ChildWin_userdefine.focus()
+
+    ChildWin_userdefine.bind('<Return>', lambda event: [func_userch_ok()])
 
 
 def User_select_band():
