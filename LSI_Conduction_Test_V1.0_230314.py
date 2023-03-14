@@ -10,9 +10,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 import matplotlib.pyplot as plt
 
-# plt.rcParams.update({'font.size': 8})
 plt.rc("xtick", labelsize=8)
 plt.rc("ytick", labelsize=8)
+# plt.rcParams.update({'font.size': 8})
+
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
@@ -68,9 +69,6 @@ ax3.axis(xmin=0, xmax=25)
 ax3.set_xlabel("Measured Power (dBm)", fontsize=8)
 # ax3.set_ylabel("ACLR (dBc)", fontsize=8)
 ax3.grid(True, color="black", alpha=0.3, linestyle="--")
-
-# ax4 = plt.subplot(2, 2, 3)
-# ax4.remove()
 
 canvas.draw
 canvas.get_tk_widget().grid(row=0, column=0, sticky=NSEW)
@@ -150,9 +148,14 @@ def Select_Main(v, ch_option, User_defined_path, User_defined_band):
         elif (ch_option == 3) & (User_defined_path == "Sub"):
             Band_Select_Main_var[count].set(False)
         else:
-            Band_Select_Main_var[count].set(True)
+            if (v == 3) & (i in [39]):
+                Chkbox_Main[count].config(state=tk.DISABLED)
+                Band_Select_Main_var[count].set(False)
+            else:
+                Band_Select_Main_var[count].set(True)
 
         Chkbox_Main[count].place(x=pos_x, y=pos_y, width=50)
+
 
 # %%
 TX_Sub_frame = ttkbst.Labelframe(Setting_frame, text="TX Sub")
@@ -210,13 +213,31 @@ def Select_Sub(v, ch_option, User_defined_path, User_defined_band):
             if (v == 2) & (i in [5, 8, 12, 13, 17, 18, 19, 20, 26]):
                 Chkbox_Sub[count].config(state=tk.DISABLED)
                 Band_Select_Sub_var[count].set(False)
-            elif (v == 3) & (i in [5, 8, 12, 13, 20, 26, 39]):
+            elif (v == 3) & (i in [5, 8, 12, 13, 20, 26, 39, 77, 78]):
                 Chkbox_Sub[count].config(state=tk.DISABLED)
                 Band_Select_Sub_var[count].set(False)
             else:
                 Band_Select_Sub_var[count].set(True)
 
         Chkbox_Sub[count].place(x=pos_x, y=pos_y, width=50)
+
+
+# %%
+# 실행 프레임
+Bottom_frame = ttkbst.Frame(Left_frame)
+Bottom_frame.place(x=5, y=820, width=755, height=40)
+
+# Themecombo = ttkbst.Combobox(Bottom_frame, values=themes, textvariable=theme, font=("Consolas", 8))
+# Themecombo.place(x=5, y=8, width=100, height=30)
+
+theme_options = tk.Menubutton(Bottom_frame, text="Select a theme")
+menu = tk.Menu(theme_options)
+
+for t in themes:
+    menu.add_radiobutton(label=t, variable="themename", command=change_theme)
+
+theme_options["menu"] = menu
+theme_options.place(x=0, y=5, width=100, height=30)
 
 # %%
 User_defined_path = []
@@ -249,9 +270,8 @@ def func_userch(Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Sele
     Entry_user_define_ch.place(x=150, y=10, width=200, height=30)
     OK_btn = ttkbst.Button(ChildWin_userdefine, text="OK")
     OK_btn.place(x=360, y=10, width=60, height=30)
+    ChildWin_userdefine.bind("<Return>", lambda event: [func_userch_ok()])
     ChildWin_userdefine.focus()
-
-    ChildWin_userdefine.bind('<Return>', lambda event: [func_userch_ok()])
 
 
 def User_select_band():
@@ -291,6 +311,53 @@ def func_userch_ok():
     Select_Sub(Rat_option_var.get(), 3, User_defined_path, User_defined_band)
 
 
+Run_mode_var = tk.IntVar()
+
+Sig_Test = ttkbst.Radiobutton(
+    Bottom_frame,
+    text="<F1> Signaling",
+    value=1,
+    variable=Run_mode_var,
+    command=lambda: [
+        Run_mode_var.set(1),  # Signaling
+        Rat_option_var.set(2),  # LTE Selected
+        Rat_Option1.config(state=tk.NORMAL),  # 3G enable
+        Rat_Option2.config(state=tk.NORMAL),  # LTE enable
+        Rat_Option3.config(state=tk.DISABLED),  # NR Disable
+    ],
+)
+Sig_Test.place(x=400, y=12)
+
+Nonsig_Test = ttkbst.Radiobutton(
+    Bottom_frame,
+    text="<F2> Non-Signal",
+    value=2,
+    variable=Run_mode_var,
+    command=lambda: [
+        Run_mode_var.set(2),  # Non-signaling
+        Rat_option_var.set(2),  # LTE Selected
+        Rat_Option1.config(state=tk.NORMAL),  # 3G enable
+        Rat_Option2.config(state=tk.NORMAL),  # LTE enable
+        Rat_Option3.config(state=tk.NORMAL),  # NR enable
+    ],
+)
+Nonsig_Test.place(x=515, y=12)
+
+APT_Tune = ttkbst.Radiobutton(
+    Bottom_frame,
+    text="<F3> APT Tuning",
+    value=3,
+    variable=Run_mode_var,
+    command=lambda: [
+        Run_mode_var.set(3),
+        Rat_option_var.set(3),
+        Rat_Option1.config(state=tk.DISABLED),  # 3G disable
+        Rat_Option2.config(state=tk.DISABLED),  # LTE disable
+        Rat_Option3.config(state=tk.NORMAL),  # NR enable
+    ],
+)
+APT_Tune.place(x=640, y=12)
+
 Rat_frame = ttkbst.Labelframe(Setting_frame, text="RAT")
 Rat_frame.place(x=0, y=0, width=150, height=50)
 
@@ -302,6 +369,7 @@ Rat_Option1 = ttkbst.Radiobutton(
     value=1,
     variable=Rat_option_var,
     command=lambda: [
+        APT_Tune.config(state=tk.DISABLED),  # APT Tune enable
         Select_Main(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
         Select_Sub(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
     ],
@@ -315,6 +383,7 @@ Rat_Option2 = ttkbst.Radiobutton(
     value=2,
     variable=Rat_option_var,
     command=lambda: [
+        APT_Tune.config(state=tk.DISABLED),  # APT Tune enable
         Select_Main(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
         Select_Sub(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
     ],
@@ -328,6 +397,7 @@ Rat_Option3 = ttkbst.Radiobutton(
     value=3,
     variable=Rat_option_var,
     command=lambda: [
+        APT_Tune.config(state=tk.NORMAL),  # APT Tune enable
         Select_Main(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
         Select_Sub(Rat_option_var.get(), Ch_option_var.get(), User_defined_path, User_defined_band),
     ],
@@ -444,71 +514,6 @@ Select_Subtdd = ttkbst.Button(
 Select_Subtdd.place(x=4, y=68, width=50, height=29)
 
 # %%
-# 실행 프레임
-Bottom_frame = ttkbst.Frame(Left_frame)
-Bottom_frame.place(x=5, y=820, width=755, height=40)
-
-# Themecombo = ttkbst.Combobox(Bottom_frame, values=themes, textvariable=theme, font=("Consolas", 8))
-# Themecombo.place(x=5, y=8, width=100, height=30)
-
-theme_options = tk.Menubutton(Bottom_frame, text="Select a theme")
-menu = tk.Menu(theme_options)
-
-for t in themes:
-    menu.add_radiobutton(label=t, variable="themename", command=change_theme)
-
-theme_options["menu"] = menu
-theme_options.place(x=0, y=5, width=100, height=30)
-
-# %%
-Run_mode_var = tk.IntVar()
-
-Sig_Test = ttkbst.Radiobutton(
-    Bottom_frame,
-    text="<F1> Signaling",
-    value=1,
-    variable=Run_mode_var,
-    command=lambda: [
-        Run_mode_var.set(1),  # Signaling
-        Rat_option_var.set(2),  # LTE Selected
-        Rat_Option1.config(state=tk.NORMAL),  # 3G enable
-        Rat_Option2.config(state=tk.NORMAL),  # LTE enable
-        Rat_Option3.config(state=tk.DISABLED),  # NR Disable
-    ],
-)
-Sig_Test.place(x=400, y=12)
-
-Nonsig_Test = ttkbst.Radiobutton(
-    Bottom_frame,
-    text="<F2> Non-Signal",
-    value=2,
-    variable=Run_mode_var,
-    command=lambda: [
-        Run_mode_var.set(2),  # Non-signaling
-        Rat_option_var.set(2),  # LTE Selected
-        Rat_Option1.config(state=tk.NORMAL),  # 3G enable
-        Rat_Option2.config(state=tk.NORMAL),  # LTE enable
-        Rat_Option3.config(state=tk.NORMAL),  # NR enable
-    ],
-)
-Nonsig_Test.place(x=515, y=12)
-
-APT_Tune = ttkbst.Radiobutton(
-    Bottom_frame,
-    text="<F3> APT Tuning",
-    value=3,
-    variable=Run_mode_var,
-    command=lambda: [
-        Run_mode_var.set(3),
-        Rat_option_var.set(3),
-        Rat_Option1.config(state=tk.DISABLED),  # 3G disable
-        Rat_Option2.config(state=tk.DISABLED),  # LTE disable
-        Rat_Option3.config(state=tk.NORMAL),  # NR enable
-    ],
-)
-APT_Tune.place(x=640, y=12)
-
-# %%
 def Callback_CB(combo1, Rat_option_var):
     Call_Box = combo1.get()
 
@@ -560,6 +565,7 @@ def Callback_CB(combo1, Rat_option_var):
     else:
         msgbox.showwarning("Warning", "Select Call_Box")
 
+
 # %%
 toolbar_frame = ttkbst.Frame(Left_frame)
 toolbar_frame.place(x=5, y=80, width=755, height=40)
@@ -596,12 +602,12 @@ MIPI_frame = ttkbst.Labelframe(Setting_frame, text="MIPI")
 MIPI_frame.place(x=470, y=50, width=285, height=240)
 
 Mipi_data = {
-    "LB_PA": [2, 13, 29, 0],
-    "LB_SM": [2, 5, 29, 0],
-    "OMH_PA": [0, 14, 29, 0],
-    "OMH_SM": [0, 5, 29, 0],
-    "NR_PA": [4, 15, 29, 0],
-    "NR_SM": [4, 5, 29, 0],
+    "LB_PA": [2, 13, 2, 0],
+    "LB_SM": [2, 5, 2, 0],
+    "OMH_PA": [0, 14, 2, 0],
+    "OMH_SM": [0, 5, 2, 0],
+    "NR_PA": [4, 15, 2, 0],
+    "NR_SM": [4, 5, 2, 0],
 }
 Mipi_Label = [None] * len(Mipi_data)
 
@@ -640,7 +646,7 @@ Btn_LB_PAW = ttkbst.Button(
     MIPI_frame,
     text="W",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_W(text_area, Mipi_data["LB_PA"], combo4)],
+    command=lambda: [func.Check_mipi_W(text_area, "LTE", Mipi_data["LB_PA"], combo4)],
 )
 Btn_LB_PAW.place(x=200, y=32, width=35, height=26)
 
@@ -648,7 +654,7 @@ Btn_LB_PAR = ttkbst.Button(
     MIPI_frame,
     text="R",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_R(text_area, Mipi_data["LB_PA"], combo4)],
+    command=lambda: [func.Check_mipi_R(text_area, "LTE", Mipi_data["LB_PA"], combo4)],
 )
 Btn_LB_PAR.place(x=240, y=32, width=35, height=26)
 
@@ -657,7 +663,7 @@ Btn_LB_SMW = ttkbst.Button(
     MIPI_frame,
     text="W",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_W(text_area, Mipi_data["LB_SM"], combo4)],
+    command=lambda: [func.Check_mipi_W(text_area, "LTE", Mipi_data["LB_SM"], combo4)],
 )
 Btn_LB_SMW.place(x=200, y=62, width=35, height=26)
 
@@ -665,33 +671,33 @@ Btn_LB_SMR = ttkbst.Button(
     MIPI_frame,
     text="R",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_R(text_area, Mipi_data["LB_SM"], combo4)],
+    command=lambda: [func.Check_mipi_R(text_area, "LTE", Mipi_data["LB_SM"], combo4)],
 )
 Btn_LB_SMR.place(x=240, y=62, width=35, height=26)
 
 # %%
-Btn_OMHW = ttkbst.Button(
+Btn_OMH_PAW = ttkbst.Button(
     MIPI_frame,
     text="W",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_W(text_area, Mipi_data["OMH_PA"], combo4)],
+    command=lambda: [func.Check_mipi_W(text_area, "LTE", Mipi_data["OMH_PA"], combo4)],
 )
-Btn_OMHW.place(x=200, y=92, width=35, height=26)
+Btn_OMH_PAW.place(x=200, y=92, width=35, height=26)
 
-Btn_OMHR = ttkbst.Button(
+Btn_OMH_PAR = ttkbst.Button(
     MIPI_frame,
     text="R",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_R(text_area, Mipi_data["OMH_PA"], combo4)],
+    command=lambda: [func.Check_mipi_R(text_area, "LTE", Mipi_data["OMH_PA"], combo4)],
 )
-Btn_OMHR.place(x=240, y=92, width=35, height=26)
+Btn_OMH_PAR.place(x=240, y=92, width=35, height=26)
 
 # %%
 Btn_OMH_SMW = ttkbst.Button(
     MIPI_frame,
     text="W",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_W(text_area, Mipi_data["OMH_SM"], combo4)],
+    command=lambda: [func.Check_mipi_W(text_area, "LTE", Mipi_data["OMH_SM"], combo4)],
 )
 Btn_OMH_SMW.place(x=200, y=122, width=35, height=26)
 
@@ -699,7 +705,7 @@ Btn_OMH_SMR = ttkbst.Button(
     MIPI_frame,
     text="R",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_R(text_area, Mipi_data["OMH_SM"], combo4)],
+    command=lambda: [func.Check_mipi_R(text_area, "LTE", Mipi_data["OMH_SM"], combo4)],
 )
 Btn_OMH_SMR.place(x=240, y=122, width=35, height=26)
 
@@ -708,7 +714,7 @@ Btn_NRPAW = ttkbst.Button(
     MIPI_frame,
     text="W",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_W(text_area, Mipi_data["NR_PA"], combo4)],
+    command=lambda: [func.Check_mipi_W(text_area, "NR", Mipi_data["NR_PA"], combo4)],
 )
 Btn_NRPAW.place(x=200, y=152, width=35, height=26)
 
@@ -716,7 +722,7 @@ Btn_NRPAR = ttkbst.Button(
     MIPI_frame,
     text="R",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_R(text_area, Mipi_data["NR_PA"], combo4)],
+    command=lambda: [func.Check_mipi_R(text_area, "NR", Mipi_data["NR_PA"], combo4)],
 )
 Btn_NRPAR.place(x=240, y=152, width=35, height=26)
 
@@ -725,7 +731,7 @@ Btn_NRSMW = ttkbst.Button(
     MIPI_frame,
     text="W",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_W(text_area, Mipi_data["NR_SM"], combo4)],
+    command=lambda: [func.Check_mipi_W(text_area, "NR", Mipi_data["NR_SM"], combo4)],
 )
 Btn_NRSMW.place(x=200, y=182, width=35, height=26)
 
@@ -733,7 +739,7 @@ Btn_NRSMR = ttkbst.Button(
     MIPI_frame,
     text="R",
     style="MIPI.TButton",
-    command=lambda: [func.Check_mipi_R(text_area, Mipi_data["NR_SM"], combo4)],
+    command=lambda: [func.Check_mipi_R(text_area, "NR", Mipi_data["NR_SM"], combo4)],
 )
 Btn_NRSMR.place(x=240, y=182, width=35, height=26)
 
@@ -799,6 +805,7 @@ Rat_Option2.invoke()
 Ch_option_var.set(1)  # 1로 세팅만 한다.
 Pw_option_var.set(1)
 Run_mode_var.set(2)
+APT_Tune.config(state=tk.DISABLED)  # APT Tune Disable
 
 # %%
 BW_list = blist.Init_BW_Setting(Rat_option_var.get())
@@ -938,5 +945,3 @@ Win_GUI.bind(
 # %%
 Win_GUI.resizable(False, False)
 Win_GUI.mainloop()
-
-

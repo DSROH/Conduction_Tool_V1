@@ -413,7 +413,7 @@ def Power_loop(
         Sy_current, Pa_current = func.PA_Current_Measure(E3632a_1, E3632a_2)
         total_current = Pa_current + Sy_current
 
-        if PwrL != 23:
+        if PwrL < 23:
             Power_diff = round(abs(TX_power - float(PwrL)), 1)
             Max_diff = 0.5
 
@@ -532,7 +532,7 @@ def Power_loop(
             list_ACLR_max,
         )
     str_time = datetime.now().strftime("%y%m%d_%H%M%S_")
-    fig.savefig(save_dir + str_time + f"Signaling_LTE_B{Testband}_{channel}CH {bandwidth}MHz" + ".png", dpi=300)
+    fig.savefig(save_dir + str_time + f"Signaling_LTE_B{Testband}_{channel}CH {bandwidth}MHz" + ".jpg", dpi=300)
 
     return tx_result
 
@@ -584,8 +584,6 @@ def LTE_Signaling_test(
             channel_list = Test_band_ch_list[key][Testband]
             bandwidth_list = BW_list[key][Testband]
             Status = Callbox.query("FETC:LTE:SIGN:PSW:STAT?").strip("\n")
-            band_tx_result = []
-            ch_tx_result = []
             if Status != "CEST":
                 if Testband in [38, 39, 40, 41]:
                     Tdd_initialize(Callbox, 38, 38000, text_area)
@@ -598,22 +596,20 @@ def LTE_Signaling_test(
                     time.sleep(3)
                     Fdd_measure_setting(Callbox)
 
-            for channel in channel_list:
-                bandwidth_tx_result = []
-
-                for bandwidth in bandwidth_list:
+            band_tx_result = []
+            bandwidth_tx_result = []
+            for bandwidth in bandwidth_list:
+                ch_tx_result = []
+                for channel in channel_list[bandwidth]:
                     Connected_CH = int(Callbox.query("CONFigure:LTE:SIGN:RFS:PCC:CHAN:DL?"))
-
                     if channel != Connected_CH:
                         Connected_CH = Handover(Callbox, dut, E3632a_1, E3632a_2, Testband, channel, text_area)
-
                     text_area.insert(tk.END, "\n")
                     text_area.insert(tk.END, "*" * 44)
                     text_area.insert(tk.END, f" {rat} B{Testband:<2} {path} {Connected_CH:>5}CH {bandwidth:>2d}MHz ")
                     text_area.insert(tk.END, "*" * 44)
                     text_area.insert(tk.END, "\n")
                     text_area.see(tk.END)
-
                     tx_result = Power_loop(
                         dut,
                         Callbox,
@@ -632,24 +628,22 @@ def LTE_Signaling_test(
                         save_dir,
                         text_area,
                     )
-                    bandwidth_tx_result.append(tx_result)
+                    ch_tx_result.append(tx_result)
 
-                ch_tx_result = pd.concat(
-                    bandwidth_tx_result,
-                    axis=0,
-                    keys=[str(bw) + " MHz" for bw in bandwidth_list],
-                    names=[f"LTE B{Testband} {path} {channel}CH"],
+                bandwidth_tx_result = pd.concat(
+                    ch_tx_result,
+                    axis=1,
+                    keys=[f"CH {i}" for i in range(1, len(channel_list[bandwidth]) + 1)],
+                    # names=[f"LTE {path} B{Testband} {bandwidth}MHz"],
                 )
-                band_tx_result.append(ch_tx_result)
-
+                band_tx_result.append(bandwidth_tx_result)
             Total_tx_result = pd.concat(
                 band_tx_result,
-                axis=1,
-                keys=[str(ch) + " CH" for ch in channel_list],
-                names=[f"LTE B{Testband} {path}"],
+                axis=0,
+                keys=[str(bw) + " MHz" for bw in bandwidth_list],
+                names=[f"LTE {path} B{Testband}"],
             )
-
-            func.resut_to_excel(Total_tx_result, filename, f"LTE B{Testband} {path}")
+            func.resut_to_excel(Total_tx_result, filename, f"LTE {path} B{Testband}")
             func.WB_Format(filename, 1, 1, 0)
 
     func.images2PdfFile(save_dir, filename)
