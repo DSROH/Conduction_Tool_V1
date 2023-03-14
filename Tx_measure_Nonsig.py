@@ -387,6 +387,6 @@ def NR_tx_measure(
             Sy_current,
         ]
     str_time = datetime.now().strftime("%y%m%d_%H%M%S_")
-    fig.savefig(save_dir + str_time + f"NonSig_NRS_n{Testband}_{path}_{channel}CH {bandwidth}MHz" + ".png", dpi=300)
+    fig.savefig(save_dir + str_time + f"NonSig_NRS_n{Testband}_{path}_{channel}CH {bandwidth}MHz" + ".jpg", dpi=300)
 
     return one_channel_tx_result
