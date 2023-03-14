@@ -800,7 +800,7 @@ def Power_setting(Pw_option_var):
     ChildWin_pw.resizable(False, False)
     ChildWin_pw.focus()
 
-    ChildWin_pw.bind('<Return>', lambda event:[Power_btn_ok()])
+    ChildWin_pw.bind("<Return>", lambda event: [Power_btn_ok()])
 
     return Pw_option_var
 
@@ -1199,8 +1199,10 @@ def BW_setting(v, Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Se
     ChildWin_bw.geometry(f"{win_width}x{win_height}+{x}+{y}")
     ChildWin_bw.resizable(False, False)
     ChildWin_bw.focus()
-    
-    ChildWin_bw.bind('<Return>', lambda event: [BW_list.clear(), BW_list.update(BW_setting_ok(Band_list, BW_list_var))])
+
+    ChildWin_bw.bind(
+        "<Return>", lambda event: [BW_list.clear(), BW_list.update(BW_setting_ok(Band_list, BW_list_var))]
+    )
 
     return BW_list
 
