@@ -96,52 +96,8 @@ def Check_testband(
 ):
     W_list = {0: [1, 2, 4, 5, 8], 1: [1, 2, 4]}
     B_list = {
-        0: [
-            1,
-            2,
-            3,
-            4,
-            5,
-            7,
-            8,
-            12,
-            13,
-            17,
-            18,
-            19,
-            20,
-            25,
-            26,
-            28,
-            66,
-            38,
-            39,
-            40,
-            41,
-        ],
-        1: [
-            1,
-            2,
-            3,
-            4,
-            5,
-            7,
-            8,
-            12,
-            13,
-            17,
-            18,
-            19,
-            20,
-            25,
-            26,
-            28,
-            66,
-            38,
-            39,
-            40,
-            41,
-        ],
+        0: [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41],
+        1: [1, 2, 3, 4, 5, 7, 8, 12, 13, 17, 18, 19, 20, 25, 26, 28, 66, 38, 39, 40, 41],
     }
     N_list = {
         0: [1, 2, 3, 5, 7, 8, 12, 13, 20, 25, 26, 28, 66, 38, 39, 40, 41, 77, 78],
@@ -1017,6 +973,7 @@ def Check_testband(
 
 
 def Selectall_band(Rat_option_var, TX_path, Band_Select_var):
+
     chk = []
 
     for c, i in enumerate(Band_Select_var):
@@ -1201,14 +1158,12 @@ def channel_converter(band, channel):
         40: [0],
         41: [0],
     }
-
     # rxfreq = fdl_low, + 0.1*(ndl - ndl_offset)
     # txfreq = ful_low, + 0.1*(nul - nul_offset)
     rx = int((Info_freq_calc[band][0] + 0.1 * (channel - Info_freq_calc[band][1])) * 1000)
-    tx = int((rx / 1000 - freq_separation[band][0]) * 1000)
-
     # tx = rx - np.float_(freq_separation[band][0])
     # tx = Info_freq_calc[band][2] + 0.1 * (channel - Info_freq_calc[band][3])
+    tx = int((rx / 1000 - freq_separation[band][0]) * 1000)
 
     return rx, tx
 
@@ -1346,8 +1301,10 @@ def Power_setting(Pw_option_var):
 
     scr_width = int(ChildWin_pw.winfo_screenwidth())
     scr_height = int(ChildWin_pw.winfo_screenheight())
+
     x = int((scr_width - win_width) / 2)
     y = int((scr_height - win_height) / 2)
+
     ChildWin_pw.geometry(f"{win_width}x{win_height}+{x}+{y}")
     ChildWin_pw.resizable(False, False)
     ChildWin_pw.bind("<Return>", lambda event: [Power_btn_ok()])
@@ -1362,21 +1319,10 @@ def Power_btn_ok():
 
 
 def Init_BW_Setting(v):
-
     if v == 1:  # 3G
         BW_list = {
-            0: {
-                1: [5],
-                2: [5],
-                4: [5],
-                5: [5],
-                8: [5],
-            },
-            1: {
-                1: [5],
-                2: [5],
-                4: [5],
-            },
+            0: {1: [5], 2: [5], 4: [5], 5: [5], 8: [5]},
+            1: {1: [5], 2: [5], 4: [5]},
         }
 
     elif v == 2:  # LTE
@@ -1463,14 +1409,7 @@ def Init_BW_Setting(v):
     return BW_list
 
 
-def BW_setting(
-    v,
-    Band_index_Main,
-    Band_Select_Main_var,
-    Band_index_Sub,
-    Band_Select_Sub_var,
-    BW_list,
-):
+def BW_setting(v, Band_index_Main, Band_Select_Main_var, Band_index_Sub, Band_Select_Sub_var, BW_list):
 
     global ChildWin_bw
     global Band_list_var
@@ -1748,12 +1687,7 @@ def BW_setting(
 
     Btn_ok = ttkbst.Button(ChildWin_bw, text="OK", bootstyle="info")
     Btn_ok.place(x=Btn_ok_x, y=Btn_ok_y, width=45, height=30)
-    Btn_ok.config(
-        command=lambda: [
-            BW_list.clear(),
-            BW_list.update(BW_setting_ok(Band_list, BW_list_var)),
-        ]
-    )
+    Btn_ok.config(command=lambda: [BW_list.clear(), BW_list.update(BW_setting_ok(Band_list, BW_list_var))])
 
     scr_width = int(ChildWin_bw.winfo_screenwidth())
     scr_height = int(ChildWin_bw.winfo_screenheight())
@@ -1764,10 +1698,7 @@ def BW_setting(
 
     ChildWin_bw.bind(
         "<Return>",
-        lambda event: [
-            BW_list.clear(),
-            BW_list.update(BW_setting_ok(Band_list, BW_list_var)),
-        ],
+        lambda event: [BW_list.clear(), BW_list.update(BW_setting_ok(Band_list, BW_list_var))],
     )
     ChildWin_bw.focus()
 
