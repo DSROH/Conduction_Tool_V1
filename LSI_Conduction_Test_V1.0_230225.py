@@ -1,26 +1,21 @@
 # %%
 import tkinter as tk
-import ttkbootstrap as ttkbst
-import tkinter.font as font
-from ttkbootstrap.constants import *
-import tkinter.scrolledtext as st
 import tkinter.messagebox as msgbox
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+import tkinter.scrolledtext as st
 
 import matplotlib.pyplot as plt
+import ttkbootstrap as ttkbst
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from ttkbootstrap.constants import *
 
 plt.rc("xtick", labelsize=8)
 plt.rc("ytick", labelsize=8)
 # plt.rcParams.update({'font.size': 8})
 
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.figure import Figure
-
 import threading
 
-import Function as func
 import Band_list as blist
+import Function as func
 
 # %%
 CB_list, PS_list1, PS_list2, CP_list = func.Equipment_scan()

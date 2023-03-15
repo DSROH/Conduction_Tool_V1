@@ -1,30 +1,25 @@
 import os
+import threading
 import time
-from datetime import datetime
-
-import serial
-import pyvisa as visa
-from io import StringIO
-
 import tkinter as tk
 import tkinter.messagebox as msgbox
+from datetime import datetime
+from io import StringIO
 from tkinter import filedialog
 
 import img2pdf
-
+import numpy as np
+import pandas as pd
+import pyvisa as visa
+import serial
 from openpyxl import load_workbook
-from openpyxl.styles import Font, Alignment
+from openpyxl.styles import Alignment, Font
 from openpyxl.styles.numbers import builtin_format_code
 
-import pandas as pd
-import numpy as np
-
-import threading
-
-from Band_list import *
 import Tx_measure_Apt as Apt
 import Tx_measure_Nonsig as Nonsig
 import Tx_measure_Signaling as Sig
+from Band_list import *
 
 font_style = Font(
     name="Calibri",

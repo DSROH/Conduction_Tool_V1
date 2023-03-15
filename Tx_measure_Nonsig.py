@@ -1,9 +1,11 @@
 import time
-from datetime import datetime
 import tkinter as tk
+from datetime import datetime
+
 import pandas as pd
-from Band_list import channel_converter, NR_channel_converter, Num_RB
+
 import Function as func
+from Band_list import NR_channel_converter, Num_RB, channel_converter
 
 pd.options.display.float_format = "{:.5f}".format
 

@@ -1,5 +1,6 @@
-import ttkbootstrap as ttkbst
 import tkinter as tk
+
+import ttkbootstrap as ttkbst
 
 
 def merge_dic(x, y):
